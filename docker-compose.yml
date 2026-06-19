@@ -1,0 +1,32 @@
+# Clarify Autonomous Security Layer
+#
+# Быстрый старт:
+#   1. Обучите модель:         python -m src.models.train_beaconing
+#   2. Запустите демо:          docker-compose up
+#   3. Или без Docker:          python -m src.ui.alert_card
+#
+# Для пилотов с Wazuh/ELK:
+#   - Раскомментируйте volumes для логов
+#   - Настройте коннекторы в config/connectors.yaml
+
+version: "3.8"
+
+services:
+  clarify:
+    build: .
+    container_name: clarify
+    ports:
+      - "8000:8000"
+    volumes:
+      # Конфигурация (редактируется снаружи)
+      - ./config:/app/config:ro
+      # Модели (сохраняются после обучения)
+      - ./models:/app/models
+      # Для пилотов: проброс логов Wazuh/ELK
+      # - /var/log/wazuh:/var/log/wazuh:ro
+      # - /var/log/elasticsearch:/var/log/elasticsearch:ro
+    environment:
+      - CLARIFY_ENV=production
+      - CLARIFY_LOG_LEVEL=INFO
+    restart: unless-stopped
+    command: ["python", "-m", "src.ui.alert_card"]

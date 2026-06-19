@@ -1,0 +1,276 @@
+# =============================================================================
+# Clarify Feature Dictionary — English
+# =============================================================================
+
+features:
+
+  # ---------------------------------------------------------------------------
+  # Beaconing / C2 Timing Features
+  # ---------------------------------------------------------------------------
+
+  f_beacon_001:
+    feature_id: "f_beacon_001"
+    human_name: "Coefficient of Variation of Intervals"
+    category: "timing"
+    unit: "dimensionless"
+    severity_weight: 0.8
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0 and value is not None"
+        template: "Intervals between requests are too regular (CV={value:.2f}, normal ≥{baseline:.2f}) — consistent with C2 beaconing"
+        template_short: "Highly regular intervals (CV={value:.2f})"
+      - condition: "value is not None"
+        template: "Intervals between requests are suspiciously regular (CV={value:.2f}) — consistent with C2 beaconing"
+        template_short: "Regular intervals (CV={value:.2f})"
+
+  f_beacon_002:
+    feature_id: "f_beacon_002"
+    human_name: "Peak Autocorrelation of Intervals"
+    category: "timing"
+    unit: "correlation coefficient"
+    severity_weight: 0.7
+    nl_templates:
+      - condition: "value is not None and value > 0.7"
+        template: "Strong periodicity detected with lag {peak_lag}s (autocorrelation={value:.2f}) — programmed C2 beacon indicator"
+        template_short: "Periodicity {peak_lag}s (r={value:.2f})"
+      - condition: "value is not None and value > 0.4"
+        template: "Moderate periodicity observed (autocorrelation={value:.2f}, lag={peak_lag}s)"
+        template_short: "Weak periodicity (r={value:.2f})"
+      - condition: "value is not None"
+        template: "Periodicity within normal range (autocorrelation={value:.2f})"
+        template_short: "No periodicity"
+
+  f_beacon_003:
+    feature_id: "f_beacon_003"
+    human_name: "Entropy of Interval Distribution"
+    category: "timing"
+    unit: "bits"
+    severity_weight: 0.6
+    nl_templates:
+      - condition: "value is not None and value < 2.0"
+        template: "Interval distribution is abnormally ordered (entropy={value:.1f} bits) — low jitter, automated C2 indicator"
+        template_short: "Ordered intervals (H={value:.1f})"
+      - condition: "value is not None"
+        template: "Interval entropy within normal range ({value:.1f} bits)"
+        template_short: "Intervals normal"
+
+  f_beacon_004:
+    feature_id: "f_beacon_004"
+    human_name: "Mean Interarrival Time"
+    category: "timing"
+    unit: "seconds"
+    severity_weight: 0.3
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0"
+        template: "Mean interval: {value:.1f}s (baseline: {baseline:.1f}s, deviation {ratio:.1f}×)"
+        template_short: "Interval {value:.1f}s (×{ratio:.1f})"
+      - condition: "value is not None"
+        template: "Mean interval between events: {value:.1f}s"
+        template_short: "Interval {value:.1f}s"
+
+  f_beacon_005:
+    feature_id: "f_beacon_005"
+    human_name: "Event Count in Window"
+    category: "volumetric"
+    unit: "events/window"
+    severity_weight: 0.3
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0"
+        template: "Event count: {value:.0f} per window (baseline: {baseline:.0f}, {ratio:.1f}× higher)"
+        template_short: "×{ratio:.1f} events"
+      - condition: "value is not None"
+        template: "Event count: {value:.0f} per window"
+        template_short: "{value:.0f} events"
+
+  f_beacon_006:
+    feature_id: "f_beacon_006"
+    human_name: "Standard Deviation of Intervals"
+    category: "timing"
+    unit: "seconds"
+    severity_weight: 0.7
+    nl_templates:
+      - condition: "value is not None and value < 5.0"
+        template: "Intervals show almost no variation (σ={value:.1f}s) — abnormally stable timing, typical of automated C2"
+        template_short: "Stable intervals (σ={value:.1f}s)"
+      - condition: "value is not None and value < 15.0"
+        template: "Low interval variability (σ={value:.1f}s) — suspicious for beaconing"
+        template_short: "Low variability (σ={value:.1f}s)"
+      - condition: "value is not None"
+        template: "Interval variability within normal range (σ={value:.1f}s)"
+        template_short: "σ={value:.1f}s"
+
+  # ---------------------------------------------------------------------------
+  # Brute-Force Features
+  # ---------------------------------------------------------------------------
+
+  f_brute_001:
+    feature_id: "f_brute_001"
+    human_name: "Failed Authentication Rate"
+    category: "volumetric"
+    unit: "attempts/min"
+    severity_weight: 0.9
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0"
+        template: "Failed authentication rate from {source_ip}: {value}/min, {ratio:.1f}× above baseline ({baseline}/min)"
+        template_short: "×{ratio:.1f} auth rate"
+      - condition: "value is not None"
+        template: "First-time authentication activity from IP {source_ip} ({value} attempts/min), pattern matches brute-force"
+        template_short: "New IP, {value}/min"
+
+  f_brute_002:
+    feature_id: "f_brute_002"
+    human_name: "Username Uniqueness"
+    category: "behavioral"
+    unit: "unique usernames"
+    severity_weight: 0.8
+    nl_templates:
+      - condition: "value is not None and value > 10"
+        template: "Large username enumeration: {value} unique usernames from {source_ip}"
+        template_short: "{value} unique usernames"
+      - condition: "value is not None and value > 3"
+        template: "Suspicious username enumeration: {value} unique usernames from {source_ip}"
+        template_short: "{value} usernames"
+      - condition: "value is not None"
+        template: "Username count within normal range ({value})"
+        template_short: "Usernames normal"
+
+  f_brute_003:
+    feature_id: "f_brute_003"
+    human_name: "Target Host Count"
+    category: "behavioral"
+    unit: "hosts"
+    severity_weight: 0.6
+    nl_templates:
+      - condition: "value is not None and value > 3"
+        template: "Attack spreading to {value} target hosts from single source {source_ip}"
+        template_short: "{value} targets"
+
+  f_brute_004:
+    feature_id: "f_brute_004"
+    human_name: "New User-Agent Strings"
+    category: "behavioral"
+    unit: "count"
+    severity_weight: 0.4
+    nl_templates:
+      - condition: "value is not None and value > 0 and baseline is not None and baseline > 0"
+        template: "Detected {value} new user-agent(s) from IP {source_ip} (first seen in this window)"
+        template_short: "{value} new user-agents"
+
+  # ---------------------------------------------------------------------------
+  # DGA Features
+  # ---------------------------------------------------------------------------
+
+  f_dga_001:
+    feature_id: "f_dga_001"
+    human_name: "Unique Domains per Source"
+    category: "behavioral"
+    unit: "domains/window"
+    severity_weight: 0.9
+    nl_templates:
+      - condition: "value is not None and value > 30 and baseline is not None and baseline > 0"
+        template: "Host {source_ip} queried {value} unique domains in window (normal: {baseline}) — consistent with DGA"
+        template_short: "{value} unique domains"
+      - condition: "value is not None"
+        template: "Host {source_ip} queried {value} unique domains in window — pattern suspicious for DGA"
+        template_short: "{value} domains"
+
+  f_dga_002:
+    feature_id: "f_dga_002"
+    human_name: "Domain Character Entropy"
+    category: "lexical"
+    unit: "bits"
+    severity_weight: 0.8
+    nl_templates:
+      - condition: "value is not None and value > 3.5"
+        template: "Abnormally high domain name entropy ({value:.1f} bits) — names appear randomly generated (DGA)"
+        template_short: "Entropy {value:.1f} bits"
+      - condition: "value is not None and value > 3.0"
+        template: "Elevated domain name entropy ({value:.1f} bits) — possible DGA"
+        template_short: "Entropy {value:.1f}"
+
+  f_dga_003:
+    feature_id: "f_dga_003"
+    human_name: "NXDOMAIN Rate"
+    category: "behavioral"
+    unit: "ratio"
+    severity_weight: 0.7
+    nl_templates:
+      - condition: "value is not None and value > 0.8"
+        template: "Very high rate of non-existent domains ({value:.0%} NXDOMAIN) — typical of DGA botnet"
+        template_short: "{value:.0%} NXDOMAIN"
+      - condition: "value is not None and value > 0.5"
+        template: "Elevated NXDOMAIN rate ({value:.0%}) — possible DGA or misconfiguration"
+        template_short: "{value:.0%} NXDOMAIN"
+
+  f_dga_004:
+    feature_id: "f_dga_004"
+    human_name: "TLD Diversity"
+    category: "lexical"
+    unit: "unique TLDs"
+    severity_weight: 0.4
+    nl_templates:
+      - condition: "value is not None and value > 5"
+        template: "Unusually high TLD diversity: {value} unique TLDs — characteristic of DGA"
+        template_short: "{value} different TLDs"
+
+  f_dga_005:
+    feature_id: "f_dga_005"
+    human_name: "Mean Domain Length"
+    category: "lexical"
+    unit: "characters"
+    severity_weight: 0.3
+    nl_templates:
+      - condition: "value is not None and value > 20"
+        template: "Abnormally long domain names (mean length {value:.0f} chars) — DGA indicator"
+        template_short: "Length {value:.0f}"
+
+  # ---------------------------------------------------------------------------
+  # UEBA Features (aggregates, P0)
+  # ---------------------------------------------------------------------------
+
+  f_ueba_001:
+    feature_id: "f_ueba_001"
+    human_name: "Activity Time Deviation"
+    category: "behavioral"
+    unit: "hours"
+    severity_weight: 0.6
+    nl_templates:
+      - condition: "value is not None and value > 6 and baseline is not None and baseline > 0"
+        template: "User active at unusual time ({value:.0f}h deviation from normal schedule ~{baseline}:00)"
+        template_short: "Activity at {value:.0f}h"
+
+  f_ueba_002:
+    feature_id: "f_ueba_002"
+    human_name: "Data Transfer Volume"
+    category: "volumetric"
+    unit: "MB/day"
+    severity_weight: 0.7
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0"
+        template: "Data volume: {value:.0f} MB/day, {ratio:.1f}× above user baseline ({baseline:.0f} MB/day)"
+        template_short: "×{ratio:.1f} data volume"
+      - condition: "value is not None"
+        template: "Data volume: {value:.0f} MB/day (new user, insufficient history)"
+        template_short: "{value:.0f} MB/day"
+
+  f_ueba_003:
+    feature_id: "f_ueba_003"
+    human_name: "Unique Servers Accessed"
+    category: "behavioral"
+    unit: "servers/day"
+    severity_weight: 0.5
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0"
+        template: "User accessed {value} unique servers (normal: {baseline}) — {ratio:.1f}× higher"
+        template_short: "{value} servers (×{ratio:.1f})"
+
+# =============================================================================
+# Renderer Configuration
+# =============================================================================
+
+renderer:
+  top_n_features: 3
+  selection_method: "abs_shap"
+  tie_breaker: "severity_weight"
+  float_precision: 2
+  fallback_template: "Feature {feature_name}: value = {value}"
+  fallback_template_short: "{feature_name}={value}"

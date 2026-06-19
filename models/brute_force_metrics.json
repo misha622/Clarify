@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-06-19T10:43:42.859394+00:00",
+  "detector": "brute_force",
+  "threshold": 0.05,
+  "metrics": {
+    "threshold": 0.05,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 7,
+    "fp": 0,
+    "fn": 0,
+    "tn": 23,
+    "total": 30
+  },
+  "cross_validation": {
+    "folds": [
+      {
+        "fold": 1,
+        "best_iteration": 119,
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "threshold": 0.1
+      },
+      {
+        "fold": 2,
+        "best_iteration": 76,
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "threshold": 0.1
+      },
+      {
+        "fold": 3,
+        "best_iteration": 87,
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "threshold": 0.1
+      },
+      {
+        "fold": 4,
+        "best_iteration": 100,
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "threshold": 0.1
+      },
+      {
+        "fold": 5,
+        "best_iteration": 124,
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "threshold": 0.1
+      }
+    ],
+    "mean_f1": 1.0,
+    "std_f1": 0.0,
+    "mean_precision": 1.0,
+    "mean_recall": 1.0,
+    "mean_threshold": 0.1
+  }
+}

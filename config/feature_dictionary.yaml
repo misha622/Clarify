@@ -1,0 +1,292 @@
+# =============================================================================
+# Словарь признаков Clarify
+# =============================================================================
+# Каждый признак имеет:
+#   feature_id     - внутренний идентификатор (используется в коде)
+#   human_name     - название для UI
+#   category       - группа: timing / lexical / volumetric / behavioral
+#   nl_templates   - условные шаблоны для генерации объяснений
+#   severity_weight - вес для глобальной приоритизации (НЕ для выбора топ-N)
+#
+# Шаблоны используют переменные:
+#   {value}        - текущее значение признака
+#   {baseline}     - базовая линия (историческое среднее)
+#   {ratio}        - value / baseline
+#   {ip}           - IP-адрес источника
+#   {domain}       - домен (для DNS-признаков)
+#   {source_ip}    - IP источника
+#   {target_ip}    - IP цели
+# =============================================================================
+
+features:
+
+  # ---------------------------------------------------------------------------
+  # Beaconing / C2 Timing Features
+  # ---------------------------------------------------------------------------
+
+  f_beacon_001:
+    feature_id: "f_beacon_001"
+    human_name: "Коэффициент вариации интервалов"
+    category: "timing"
+    unit: "безразмерный"
+    severity_weight: 0.8
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0 and value is not None"
+        template: "Интервалы между запросами слишком регулярны (CV={value:.2f}, при норме ≥{baseline:.2f}) — характерно для C2-маяка"
+        template_short: "Сверхрегулярные интервалы (CV={value:.2f})"
+      - condition: "value is not None"
+        template: "Интервалы между запросами подозрительно регулярны (CV={value:.2f}) — характерно для C2-маяка"
+        template_short: "Регулярные интервалы (CV={value:.2f})"
+
+  f_beacon_002:
+    feature_id: "f_beacon_002"
+    human_name: "Пик автокорреляции интервалов"
+    category: "timing"
+    unit: "коэффициент корреляции"
+    severity_weight: 0.7
+    nl_templates:
+      - condition: "value is not None and value > 0.7"
+        template: "Обнаружена сильная периодичность с лагом {peak_lag} сек (автокорреляция={value:.2f}) — признак запрограммированного C2-маяка"
+        template_short: "Периодичность {peak_lag}с (r={value:.2f})"
+      - condition: "value is not None and value > 0.4"
+        template: "Заметна умеренная периодичность (автокорреляция={value:.2f}, лаг={peak_lag}с)"
+        template_short: "Слабая периодичность (r={value:.2f})"
+      - condition: "value is not None"
+        template: "Периодичность в пределах нормы (автокорреляция={value:.2f})"
+        template_short: "Нет периодичности"
+
+  f_beacon_003:
+    feature_id: "f_beacon_003"
+    human_name: "Энтропия распределения интервалов"
+    category: "timing"
+    unit: "биты"
+    severity_weight: 0.6
+    nl_templates:
+      - condition: "value is not None and value < 2.0"
+        template: "Распределение интервалов аномально упорядочено (энтропия={value:.1f} бит) — мало джиттера, признак автоматизированного C2"
+        template_short: "Упорядоченные интервалы (H={value:.1f})"
+      - condition: "value is not None"
+        template: "Энтропия интервалов в норме ({value:.1f} бит)"
+        template_short: "Интервалы в норме"
+
+  f_beacon_004:
+    feature_id: "f_beacon_004"
+    human_name: "Средний интервал между событиями"
+    category: "timing"
+    unit: "секунды"
+    severity_weight: 0.3
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0"
+        template: "Средний интервал: {value:.1f}с (базовая линия: {baseline:.1f}с, отклонение в {ratio:.1f}×)"
+        template_short: "Интервал {value:.1f}с (×{ratio:.1f})"
+      - condition: "value is not None"
+        template: "Средний интервал между событиями: {value:.1f}с"
+        template_short: "Интервал {value:.1f}с"
+
+  f_beacon_005:
+    feature_id: "f_beacon_005"
+    human_name: "Количество событий в окне"
+    category: "volumetric"
+    unit: "событий/окно"
+    severity_weight: 0.3
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0"
+        template: "Количество событий: {value:.0f} за окно (базовая линия: {baseline:.0f}, в {ratio:.1f}× выше)"
+        template_short: "×{ratio:.1f} событий"
+      - condition: "value is not None"
+        template: "Количество событий: {value:.0f} за окно"
+        template_short: "{value:.0f} событий"
+
+  f_beacon_006:
+    feature_id: "f_beacon_006"
+    human_name: "Стандартное отклонение интервалов"
+    category: "timing"
+    unit: "секунды"
+    severity_weight: 0.7
+    nl_templates:
+      - condition: "value is not None and value < 5.0"
+        template: "Интервалы почти не варьируются (σ={value:.1f}с) — аномально стабильный тайминг, характерный для автоматизированного C2"
+        template_short: "Стабильные интервалы (σ={value:.1f}с)"
+      - condition: "value is not None and value < 15.0"
+        template: "Низкая вариативность интервалов (σ={value:.1f}с) — подозрительно для beaconing"
+        template_short: "Низкая вариативность (σ={value:.1f}с)"
+      - condition: "value is not None"
+        template: "Вариативность интервалов в норме (σ={value:.1f}с)"
+        template_short: "σ={value:.1f}с"
+
+  # ---------------------------------------------------------------------------
+  # Brute-Force Features
+  # ---------------------------------------------------------------------------
+
+  f_brute_001:
+    feature_id: "f_brute_001"
+    human_name: "Частота неуспешных аутентификаций"
+    category: "volumetric"
+    unit: "попыток/мин"
+    severity_weight: 0.9
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0"
+        template: "Частота неуспешных аутентификаций с {source_ip}: {value}/мин, в {ratio:.1f}× выше базовой линии ({baseline}/мин)"
+        template_short: "×{ratio:.1f} частота аутентификаций"
+      - condition: "value is not None"
+        template: "Впервые наблюдается активность аутентификации с IP {source_ip} ({value} попыток/мин), паттерн соответствует brute-force"
+        template_short: "Новый IP, {value}/мин"
+
+  f_brute_002:
+    feature_id: "f_brute_002"
+    human_name: "Уникальность имён пользователей"
+    category: "behavioral"
+    unit: "уникальных имён"
+    severity_weight: 0.8
+    nl_templates:
+      - condition: "value is not None and value > 10"
+        template: "Перебор большого количества имён пользователей: {value} уникальных имён с {source_ip}"
+        template_short: "{value} уникальных имён"
+      - condition: "value is not None and value > 3"
+        template: "Подозрительный перебор имён пользователей: {value} уникальных имён с {source_ip}"
+        template_short: "{value} имён"
+      - condition: "value is not None"
+        template: "Количество уникальных имён в норме ({value})"
+        template_short: "Имён в норме"
+
+  f_brute_003:
+    feature_id: "f_brute_003"
+    human_name: "Количество целевых хостов"
+    category: "behavioral"
+    unit: "хостов"
+    severity_weight: 0.6
+    nl_templates:
+      - condition: "value is not None and value > 3"
+        template: "Атака распространяется на {value} целевых хостов с одного источника {source_ip}"
+        template_short: "{value} целей"
+
+  f_brute_004:
+    feature_id: "f_brute_004"
+    human_name: "Новые user-agent строки"
+    category: "behavioral"
+    unit: "шт."
+    severity_weight: 0.4
+    nl_templates:
+      - condition: "value is not None and value > 0 and baseline is not None and baseline > 0"
+        template: "Обнаружено {value} новых user-agent с IP {source_ip} (впервые замечены в этом окне)"
+        template_short: "{value} новых user-agent"
+
+  # ---------------------------------------------------------------------------
+  # DGA Features
+  # ---------------------------------------------------------------------------
+
+  f_dga_001:
+    feature_id: "f_dga_001"
+    human_name: "Количество уникальных доменов с источника"
+    category: "behavioral"
+    unit: "доменов/окно"
+    severity_weight: 0.9
+    nl_templates:
+      - condition: "value is not None and value > 30 and baseline is not None and baseline > 0"
+        template: "Хост {source_ip} запросил {value} уникальных доменов за окно (норма: {baseline}) — характерно для DGA"
+        template_short: "{value} уникальных доменов"
+      - condition: "value is not None"
+        template: "Хост {source_ip} запросил {value} уникальных доменов за окно — паттерн подозрителен для DGA"
+        template_short: "{value} доменов"
+
+  f_dga_002:
+    feature_id: "f_dga_002"
+    human_name: "Энтропия символов домена"
+    category: "lexical"
+    unit: "биты"
+    severity_weight: 0.8
+    nl_templates:
+      - condition: "value is not None and value > 3.5"
+        template: "Аномально высокая энтропия имён доменов ({value:.1f} бит) — имена выглядят случайно сгенерированными (DGA)"
+        template_short: "Энтропия {value:.1f} бит"
+      - condition: "value is not None and value > 3.0"
+        template: "Повышенная энтропия имён доменов ({value:.1f} бит) — возможно DGA"
+        template_short: "Энтропия {value:.1f}"
+
+  f_dga_003:
+    feature_id: "f_dga_003"
+    human_name: "Доля NXDOMAIN-ответов"
+    category: "behavioral"
+    unit: "доля"
+    severity_weight: 0.7
+    nl_templates:
+      - condition: "value is not None and value > 0.8"
+        template: "Очень высокая доля несуществующих доменов ({value:.0%} NXDOMAIN) — типично для DGA-ботнета"
+        template_short: "{value:.0%} NXDOMAIN"
+      - condition: "value is not None and value > 0.5"
+        template: "Повышенная доля NXDOMAIN ({value:.0%}) — возможно DGA или ошибки конфигурации"
+        template_short: "{value:.0%} NXDOMAIN"
+
+  f_dga_004:
+    feature_id: "f_dga_004"
+    human_name: "Разнообразие TLD"
+    category: "lexical"
+    unit: "уникальных TLD"
+    severity_weight: 0.4
+    nl_templates:
+      - condition: "value is not None and value > 5"
+        template: "Необычно большое разнообразие доменных зон: {value} уникальных TLD — характерно для DGA"
+        template_short: "{value} разных TLD"
+
+  f_dga_005:
+    feature_id: "f_dga_005"
+    human_name: "Средняя длина доменного имени"
+    category: "lexical"
+    unit: "символов"
+    severity_weight: 0.3
+    nl_templates:
+      - condition: "value is not None and value > 20"
+        template: "Аномально длинные имена доменов (средняя длина {value:.0f} символов) — признак DGA"
+        template_short: "Длина {value:.0f}"
+
+  # ---------------------------------------------------------------------------
+  # UEBA Features (агрегаты, P0)
+  # ---------------------------------------------------------------------------
+
+  f_ueba_001:
+    feature_id: "f_ueba_001"
+    human_name: "Отклонение от типичного времени активности"
+    category: "behavioral"
+    unit: "часы"
+    severity_weight: 0.6
+    nl_templates:
+      - condition: "value is not None and value > 6 and baseline is not None and baseline > 0"
+        template: "Пользователь активен в нехарактерное время (отклонение {value:.0f}ч от обычного расписания {baseline}:00)"
+        template_short: "Активность в {value:.0f}ч"
+
+  f_ueba_002:
+    feature_id: "f_ueba_002"
+    human_name: "Объём переданных данных"
+    category: "volumetric"
+    unit: "МБ/день"
+    severity_weight: 0.7
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0"
+        template: "Объём данных: {value:.0f} МБ/день, в {ratio:.1f}× выше нормы пользователя ({baseline:.0f} МБ/день)"
+        template_short: "×{ratio:.1f} объём данных"
+      - condition: "value is not None"
+        template: "Объём данных: {value:.0f} МБ/день (новый пользователь, недостаточно истории)"
+        template_short: "{value:.0f} МБ/день"
+
+  f_ueba_003:
+    feature_id: "f_ueba_003"
+    human_name: "Количество уникальных серверов"
+    category: "behavioral"
+    unit: "серверов/день"
+    severity_weight: 0.5
+    nl_templates:
+      - condition: "baseline is not None and baseline > 0"
+        template: "Пользователь обратился к {value} уникальным серверам (норма: {baseline}) — в {ratio:.1f}× выше"
+        template_short: "{value} серверов (×{ratio:.1f})"
+
+# =============================================================================
+# Мета-конфигурация рендерера
+# =============================================================================
+
+renderer:
+  top_n_features: 3
+  selection_method: "abs_shap"
+  tie_breaker: "severity_weight"
+  float_precision: 2
+  fallback_template: "Признак {feature_name}: значение = {value}"
+  fallback_template_short: "{feature_name}={value}"
