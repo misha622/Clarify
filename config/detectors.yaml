@@ -1,12 +1,7 @@
 detectors:
   beaconing:
-    enabled: true
-    model_type: xgboost
-    model_path: models/beaconing_xgb.json
-    min_intervals: 15
     decision_threshold: 0.9042
-    window_size_seconds: 3600
-    max_events_per_window: 1000
+    enabled: true
     features:
     - mean_interarrival_time
     - std_interarrival_time
@@ -15,21 +10,26 @@ detectors:
     - autocorrelation_peak_value
     - entropy_interarrival
     - event_count
-  brute_force:
-    enabled: true
+    max_events_per_window: 1000
+    min_intervals: 15
+    model_path: models/beaconing_xgb.json
     model_type: xgboost
-    model_path: models\brute_force_xgb.json
-    min_events: 10
-    decision_threshold: 0.05
     window_size_seconds: 3600
+  brute_force:
+    decision_threshold: 0.5
+    enabled: true
     features:
     - auth_failure_rate
     - unique_usernames
     - target_hosts
     - new_user_agents
     - total_attempts
+    min_events: 10
+    model_path: models\brute_force_xgb.json
+    model_type: xgboost
+    window_size_seconds: 3600
   dga:
+    decision_threshold: 0.1
     enabled: true
     min_queries_from_source: 10
-    decision_threshold: 0.1
     model_path: models\dga_xgb.json

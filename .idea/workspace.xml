@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="b995291d-40dd-4cc4-bcd3-1001ede6bce1" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/detectors/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/detectors/base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/detectors/beaconing.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/detectors/beaconing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/beaconing_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/beaconing_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/detectors.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/config/detectors.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
