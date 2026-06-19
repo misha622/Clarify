@@ -1,12 +1,12 @@
-"""
-Confirm-flow для действий над алертами Clarify.
+﻿"""
+Confirm-flow РґР»СЏ РґРµР№СЃС‚РІРёР№ РЅР°Рґ Р°Р»РµСЂС‚Р°РјРё Clarify.
 
-Реализует Human-in-the-loop:
-- Кнопка "Заблокировать" НЕ исполняет действие напрямую
-- Открывает confirm-flow: модальное окно → webhook или копирование команды
-- Webhook проверяется при сохранении конфига
-- Если webhook не настроен — автоматически показывает команду для копирования
-- Чекбокс "использовать webhook" доступен только при валидном webhook URL
+Р РµР°Р»РёР·СѓРµС‚ Human-in-the-loop:
+- РљРЅРѕРїРєР° "Р—Р°Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ" РќР• РёСЃРїРѕР»РЅСЏРµС‚ РґРµР№СЃС‚РІРёРµ РЅР°РїСЂСЏРјСѓСЋ
+- РћС‚РєСЂС‹РІР°РµС‚ confirm-flow: РјРѕРґР°Р»СЊРЅРѕРµ РѕРєРЅРѕ в†’ webhook РёР»Рё РєРѕРїРёСЂРѕРІР°РЅРёРµ РєРѕРјР°РЅРґС‹
+- Webhook РїСЂРѕРІРµСЂСЏРµС‚СЃСЏ РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё РєРѕРЅС„РёРіР°
+- Р•СЃР»Рё webhook РЅРµ РЅР°СЃС‚СЂРѕРµРЅ вЂ” Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РїРѕРєР°Р·С‹РІР°РµС‚ РєРѕРјР°РЅРґСѓ РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ
+- Р§РµРєР±РѕРєСЃ "РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ webhook" РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РїСЂРё РІР°Р»РёРґРЅРѕРј webhook URL
 """
 
 import json
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class ActionMethod(Enum):
-    """Способ исполнения действия."""
+    """РЎРїРѕСЃРѕР± РёСЃРїРѕР»РЅРµРЅРёСЏ РґРµР№СЃС‚РІРёСЏ."""
     WEBHOOK = "webhook"
     COPY_COMMAND = "copy_command"
     NONE = "none"
@@ -28,6 +28,13 @@ class ActionMethod(Enum):
 @dataclass
 class FirewallCommand:
     """Команда для блокировки IP на разных фаерволах."""
+    
+    @staticmethod
+    def _escape_comment(text: str) -> str:
+        """Экранирует кавычки в комментарии для shell."""
+        return text.replace('"', '\\"').replace("'", "'\\''")
+    
+    """РљРѕРјР°РЅРґР° РґР»СЏ Р±Р»РѕРєРёСЂРѕРІРєРё IP РЅР° СЂР°Р·РЅС‹С… С„Р°РµСЂРІРѕР»Р°С…."""
     ip: str
     reason: str
     duration_hours: int = 24
@@ -58,7 +65,7 @@ class FirewallCommand:
         )
 
     def get_command(self, firewall_type: str = "iptables") -> str:
-        """Возвращает команду для указанного типа фаервола."""
+        """Р’РѕР·РІСЂР°С‰Р°РµС‚ РєРѕРјР°РЅРґСѓ РґР»СЏ СѓРєР°Р·Р°РЅРЅРѕРіРѕ С‚РёРїР° С„Р°РµСЂРІРѕР»Р°."""
         commands = {
             "iptables": self.iptables,
             "firewalld": self.firewall_cmd,
@@ -70,7 +77,7 @@ class FirewallCommand:
 
 @dataclass
 class WebhookConfig:
-    """Конфигурация webhook для авто-блокировки."""
+    """РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ webhook РґР»СЏ Р°РІС‚Рѕ-Р±Р»РѕРєРёСЂРѕРІРєРё."""
     url: str
     method: str = "POST"
     headers: dict = None
@@ -84,7 +91,7 @@ class WebhookConfig:
 
 @dataclass
 class ConfirmFlowResult:
-    """Результат confirm-flow."""
+    """Р РµР·СѓР»СЊС‚Р°С‚ confirm-flow."""
     action_id: str
     method: ActionMethod
     success: bool
@@ -95,13 +102,13 @@ class ConfirmFlowResult:
 
 class ConfirmFlow:
     """
-    Обработчик confirm-flow для действий.
+    РћР±СЂР°Р±РѕС‚С‡РёРє confirm-flow РґР»СЏ РґРµР№СЃС‚РІРёР№.
 
-    Правила:
-    1. Если webhook настроен и валиден → отправляет POST
-    2. Если webhook НЕ настроен → показывает команду для копирования
-    3. Чекбокс "использовать webhook" доступен только при валидном webhook
-    4. Все решения логируются
+    РџСЂР°РІРёР»Р°:
+    1. Р•СЃР»Рё webhook РЅР°СЃС‚СЂРѕРµРЅ Рё РІР°Р»РёРґРµРЅ в†’ РѕС‚РїСЂР°РІР»СЏРµС‚ POST
+    2. Р•СЃР»Рё webhook РќР• РЅР°СЃС‚СЂРѕРµРЅ в†’ РїРѕРєР°Р·С‹РІР°РµС‚ РєРѕРјР°РЅРґСѓ РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ
+    3. Р§РµРєР±РѕРєСЃ "РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ webhook" РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РїСЂРё РІР°Р»РёРґРЅРѕРј webhook
+    4. Р’СЃРµ СЂРµС€РµРЅРёСЏ Р»РѕРіРёСЂСѓСЋС‚СЃСЏ
     """
 
     def __init__(
@@ -111,8 +118,8 @@ class ConfirmFlow:
     ):
         """
         Args:
-            webhook_config: конфигурация webhook (None = не настроен)
-            default_firewall: тип фаервола по умолчанию для команд
+            webhook_config: РєРѕРЅС„РёРіСѓСЂР°С†РёСЏ webhook (None = РЅРµ РЅР°СЃС‚СЂРѕРµРЅ)
+            default_firewall: С‚РёРї С„Р°РµСЂРІРѕР»Р° РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РґР»СЏ РєРѕРјР°РЅРґ
         """
         self.webhook_config = webhook_config
         self.default_firewall = default_firewall
@@ -120,14 +127,14 @@ class ConfirmFlow:
 
     def validate_webhook(self) -> tuple[bool, str]:
         """
-        Проверяет доступность webhook URL.
-        Отправляет тестовый POST и ждёт 2xx.
+        РџСЂРѕРІРµСЂСЏРµС‚ РґРѕСЃС‚СѓРїРЅРѕСЃС‚СЊ webhook URL.
+        РћС‚РїСЂР°РІР»СЏРµС‚ С‚РµСЃС‚РѕРІС‹Р№ POST Рё Р¶РґС‘С‚ 2xx.
 
         Returns:
-            (успех, сообщение)
+            (СѓСЃРїРµС…, СЃРѕРѕР±С‰РµРЅРёРµ)
         """
         if not self.webhook_config or not self.webhook_config.url:
-            return False, "Webhook URL не настроен"
+            return False, "Webhook URL РЅРµ РЅР°СЃС‚СЂРѕРµРЅ"
 
         try:
             import urllib.request
@@ -149,14 +156,14 @@ class ConfirmFlow:
             with urllib.request.urlopen(req, timeout=self.webhook_config.timeout_seconds) as resp:
                 if 200 <= resp.status < 300:
                     self.webhook_config.validated = True
-                    return True, f"Webhook доступен (status={resp.status})"
+                    return True, f"Webhook РґРѕСЃС‚СѓРїРµРЅ (status={resp.status})"
                 else:
-                    return False, f"Webhook вернул статус {resp.status}"
+                    return False, f"Webhook РІРµСЂРЅСѓР» СЃС‚Р°С‚СѓСЃ {resp.status}"
 
         except urllib.error.URLError as e:
-            return False, f"Webhook недоступен: {e.reason}"
+            return False, f"Webhook РЅРµРґРѕСЃС‚СѓРїРµРЅ: {e.reason}"
         except Exception as e:
-            return False, f"Ошибка проверки webhook: {e}"
+            return False, f"РћС€РёР±РєР° РїСЂРѕРІРµСЂРєРё webhook: {e}"
 
     def execute_block(
             self,
@@ -167,19 +174,19 @@ class ConfirmFlow:
             operator: str = "unknown",
     ) -> ConfirmFlowResult:
         """
-        Выполняет блокировку IP через confirm-flow.
+        Р’С‹РїРѕР»РЅСЏРµС‚ Р±Р»РѕРєРёСЂРѕРІРєСѓ IP С‡РµСЂРµР· confirm-flow.
 
         Args:
-            ip: IP для блокировки
-            reason: причина (из SHAP-объяснения)
-            alert_id: ID алерта
-            duration_hours: длительность блокировки
-            operator: кто выполнил действие
+            ip: IP РґР»СЏ Р±Р»РѕРєРёСЂРѕРІРєРё
+            reason: РїСЂРёС‡РёРЅР° (РёР· SHAP-РѕР±СЉСЏСЃРЅРµРЅРёСЏ)
+            alert_id: ID Р°Р»РµСЂС‚Р°
+            duration_hours: РґР»РёС‚РµР»СЊРЅРѕСЃС‚СЊ Р±Р»РѕРєРёСЂРѕРІРєРё
+            operator: РєС‚Рѕ РІС‹РїРѕР»РЅРёР» РґРµР№СЃС‚РІРёРµ
 
         Returns:
             ConfirmFlowResult
         """
-        # Логируем решение
+        # Р›РѕРіРёСЂСѓРµРј СЂРµС€РµРЅРёРµ
         decision = {
             "action": "block_ip",
             "ip": ip,
@@ -190,7 +197,7 @@ class ConfirmFlow:
             "timestamp": __import__("time").time(),
         }
 
-        # Если webhook настроен и валиден — отправляем
+        # Р•СЃР»Рё webhook РЅР°СЃС‚СЂРѕРµРЅ Рё РІР°Р»РёРґРµРЅ вЂ” РѕС‚РїСЂР°РІР»СЏРµРј
         if (
                 self.webhook_config
                 and self.webhook_config.url
@@ -198,7 +205,7 @@ class ConfirmFlow:
         ):
             return self._send_webhook(ip, reason, alert_id, duration_hours, decision)
 
-        # Иначе — возвращаем команду для копирования
+        # РРЅР°С‡Рµ вЂ” РІРѕР·РІСЂР°С‰Р°РµРј РєРѕРјР°РЅРґСѓ РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ
         fw_cmd = FirewallCommand(ip=ip, reason=reason, duration_hours=duration_hours)
         command = fw_cmd.get_command(self.default_firewall)
 
@@ -208,15 +215,15 @@ class ConfirmFlow:
         self.decisions_log.append(decision)
 
         logger.info(
-            f"Блокировка {ip} (alert={alert_id}): "
-            f"webhook не настроен, команда для копирования"
+            f"Р‘Р»РѕРєРёСЂРѕРІРєР° {ip} (alert={alert_id}): "
+            f"webhook РЅРµ РЅР°СЃС‚СЂРѕРµРЅ, РєРѕРјР°РЅРґР° РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ"
         )
 
         return ConfirmFlowResult(
             action_id="block_ip",
             method=ActionMethod.COPY_COMMAND,
             success=True,
-            message="Команда готова для копирования",
+            message="РљРѕРјР°РЅРґР° РіРѕС‚РѕРІР° РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ",
             command=command,
         )
 
@@ -228,7 +235,7 @@ class ConfirmFlow:
             duration_hours: int,
             decision: dict,
     ) -> ConfirmFlowResult:
-        """Отправляет webhook на блокировку."""
+        """РћС‚РїСЂР°РІР»СЏРµС‚ webhook РЅР° Р±Р»РѕРєРёСЂРѕРІРєСѓ."""
         try:
             import urllib.request
             import urllib.error
@@ -258,13 +265,13 @@ class ConfirmFlow:
                 decision["webhook_response"] = response_body[:500]
                 self.decisions_log.append(decision)
 
-                logger.info(f"Webhook отправлен: {ip} заблокирован (alert={alert_id})")
+                logger.info(f"Webhook РѕС‚РїСЂР°РІР»РµРЅ: {ip} Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ (alert={alert_id})")
 
                 return ConfirmFlowResult(
                     action_id="block_ip",
                     method=ActionMethod.WEBHOOK,
                     success=True,
-                    message=f"IP {ip} заблокирован через webhook",
+                    message=f"IP {ip} Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ С‡РµСЂРµР· webhook",
                     webhook_response={
                         "status": resp.status,
                         "body": response_body[:200],
@@ -276,25 +283,25 @@ class ConfirmFlow:
             decision["error"] = str(e.reason)
             self.decisions_log.append(decision)
 
-            logger.error(f"Ошибка webhook для {ip}: {e.reason}")
+            logger.error(f"РћС€РёР±РєР° webhook РґР»СЏ {ip}: {e.reason}")
 
-            # Fallback: возвращаем команду
+            # Fallback: РІРѕР·РІСЂР°С‰Р°РµРј РєРѕРјР°РЅРґСѓ
             fw_cmd = FirewallCommand(ip=ip, reason=reason, duration_hours=duration_hours)
 
             return ConfirmFlowResult(
                 action_id="block_ip",
                 method=ActionMethod.COPY_COMMAND,
                 success=False,
-                message=f"Webhook недоступен ({e.reason}). Используйте команду вручную.",
+                message=f"Webhook РЅРµРґРѕСЃС‚СѓРїРµРЅ ({e.reason}). РСЃРїРѕР»СЊР·СѓР№С‚Рµ РєРѕРјР°РЅРґСѓ РІСЂСѓС‡РЅСѓСЋ.",
                 command=fw_cmd.get_command(self.default_firewall),
             )
 
     def get_decisions(self, limit: int = 50) -> list[dict]:
-        """Возвращает последние N решений из лога."""
+        """Р’РѕР·РІСЂР°С‰Р°РµС‚ РїРѕСЃР»РµРґРЅРёРµ N СЂРµС€РµРЅРёР№ РёР· Р»РѕРіР°."""
         return self.decisions_log[-limit:]
 
     def is_webhook_available(self) -> bool:
-        """Доступен ли webhook (настроен + провалидирован)."""
+        """Р”РѕСЃС‚СѓРїРµРЅ Р»Рё webhook (РЅР°СЃС‚СЂРѕРµРЅ + РїСЂРѕРІР°Р»РёРґРёСЂРѕРІР°РЅ)."""
         return (
                 self.webhook_config is not None
                 and bool(self.webhook_config.url)
@@ -303,45 +310,45 @@ class ConfirmFlow:
 
 
 # ------------------------------------------------------------------
-# Тест
+# РўРµСЃС‚
 # ------------------------------------------------------------------
 if __name__ == "__main__":
     print("=" * 60)
-    print("Тест Confirm Flow")
+    print("РўРµСЃС‚ Confirm Flow")
     print()
 
-    # Тест 1: Без webhook — команда для копирования
-    print("1. Без webhook:")
+    # РўРµСЃС‚ 1: Р‘РµР· webhook вЂ” РєРѕРјР°РЅРґР° РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ
+    print("1. Р‘РµР· webhook:")
     flow = ConfirmFlow(webhook_config=None)
     result = flow.execute_block(
         ip="203.0.113.45",
-        reason="Brute-force RDP, частота 404 в 11× выше нормы (Clarify SHAP)",
+        reason="Brute-force RDP, С‡Р°СЃС‚РѕС‚Р° 404 РІ 11Г— РІС‹С€Рµ РЅРѕСЂРјС‹ (Clarify SHAP)",
         alert_id="alert-beaconing-203-0-113-45-12345",
         operator="admin",
     )
-    print(f"   Метод: {result.method.value}")
-    print(f"   Успех: {result.success}")
-    print(f"   Сообщение: {result.message}")
-    print(f"   Команда:")
+    print(f"   РњРµС‚РѕРґ: {result.method.value}")
+    print(f"   РЈСЃРїРµС…: {result.success}")
+    print(f"   РЎРѕРѕР±С‰РµРЅРёРµ: {result.message}")
+    print(f"   РљРѕРјР°РЅРґР°:")
     print(f"   $ {result.command}")
 
     print()
 
-    # Тест 2: Валидация webhook (заведомо недоступный)
-    print("2. Валидация недоступного webhook:")
+    # РўРµСЃС‚ 2: Р’Р°Р»РёРґР°С†РёСЏ webhook (Р·Р°РІРµРґРѕРјРѕ РЅРµРґРѕСЃС‚СѓРїРЅС‹Р№)
+    print("2. Р’Р°Р»РёРґР°С†РёСЏ РЅРµРґРѕСЃС‚СѓРїРЅРѕРіРѕ webhook:")
     flow2 = ConfirmFlow(
         webhook_config=WebhookConfig(url="http://localhost:99999/webhook")
     )
     valid, msg = flow2.validate_webhook()
-    print(f"   Доступен: {valid}")
-    print(f"   Сообщение: {msg}")
-    print(f"   Чекбокс доступен: {flow2.is_webhook_available()}")
+    print(f"   Р”РѕСЃС‚СѓРїРµРЅ: {valid}")
+    print(f"   РЎРѕРѕР±С‰РµРЅРёРµ: {msg}")
+    print(f"   Р§РµРєР±РѕРєСЃ РґРѕСЃС‚СѓРїРµРЅ: {flow2.is_webhook_available()}")
 
     print()
 
-    # Тест 3: Лог решений
-    print("3. Лог решений:")
+    # РўРµСЃС‚ 3: Р›РѕРі СЂРµС€РµРЅРёР№
+    print("3. Р›РѕРі СЂРµС€РµРЅРёР№:")
     for d in flow.get_decisions():
-        print(f"   {d['ip']}: {d['reason'][:60]}... (метод: {d['method']})")
+        print(f"   {d['ip']}: {d['reason'][:60]}... (РјРµС‚РѕРґ: {d['method']})")
 
     print("=" * 60)

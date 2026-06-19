@@ -1,9 +1,9 @@
-"""
-Расчёт оконных статистик для Beaconing-детектора.
+﻿"""
+Р Р°СЃС‡С‘С‚ РѕРєРѕРЅРЅС‹С… СЃС‚Р°С‚РёСЃС‚РёРє РґР»СЏ Beaconing-РґРµС‚РµРєС‚РѕСЂР°.
 
-Все признаки основаны на engineered features по окну, а не на сырых
-последовательностях. Это позволяет использовать TreeExplainer для SHAP
-в реальном времени.
+Р’СЃРµ РїСЂРёР·РЅР°РєРё РѕСЃРЅРѕРІР°РЅС‹ РЅР° engineered features РїРѕ РѕРєРЅСѓ, Р° РЅРµ РЅР° СЃС‹СЂС‹С…
+РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЏС…. Р­С‚Рѕ РїРѕР·РІРѕР»СЏРµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ TreeExplainer РґР»СЏ SHAP
+РІ СЂРµР°Р»СЊРЅРѕРј РІСЂРµРјРµРЅРё.
 """
 
 import numpy as np
@@ -14,7 +14,7 @@ from typing import Optional
 
 @dataclass
 class WindowStats:
-    """Статистики временного окна для Beaconing-детектора."""
+    """РЎС‚Р°С‚РёСЃС‚РёРєРё РІСЂРµРјРµРЅРЅРѕРіРѕ РѕРєРЅР° РґР»СЏ Beaconing-РґРµС‚РµРєС‚РѕСЂР°."""
     mean_interarrival_time: float
     std_interarrival_time: float
     coefficient_of_variation: float
@@ -24,7 +24,7 @@ class WindowStats:
     event_count: int
 
     def to_feature_vector(self) -> list[float]:
-        """Преобразует статистики в вектор признаков для модели."""
+        """РџСЂРµРѕР±СЂР°Р·СѓРµС‚ СЃС‚Р°С‚РёСЃС‚РёРєРё РІ РІРµРєС‚РѕСЂ РїСЂРёР·РЅР°РєРѕРІ РґР»СЏ РјРѕРґРµР»Рё."""
         return [
             self.mean_interarrival_time,
             self.std_interarrival_time,
@@ -37,7 +37,7 @@ class WindowStats:
 
     @property
     def feature_names(self) -> list[str]:
-        """Имена признаков в том же порядке, что и to_feature_vector."""
+        """РРјРµРЅР° РїСЂРёР·РЅР°РєРѕРІ РІ С‚РѕРј Р¶Рµ РїРѕСЂСЏРґРєРµ, С‡С‚Рѕ Рё to_feature_vector."""
         return [
             "mean_interarrival_time",
             "std_interarrival_time",
@@ -51,13 +51,13 @@ class WindowStats:
 
 def calculate_interarrival_times(timestamps: list[float]) -> list[float]:
     """
-    Вычисляет интервалы между последовательными временными метками.
+    Р’С‹С‡РёСЃР»СЏРµС‚ РёРЅС‚РµСЂРІР°Р»С‹ РјРµР¶РґСѓ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅС‹РјРё РІСЂРµРјРµРЅРЅС‹РјРё РјРµС‚РєР°РјРё.
 
     Args:
-        timestamps: список временных меток в секундах (отсортированных)
+        timestamps: СЃРїРёСЃРѕРє РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє РІ СЃРµРєСѓРЅРґР°С… (РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹С…)
 
     Returns:
-        список интервалов в секундах
+        СЃРїРёСЃРѕРє РёРЅС‚РµСЂРІР°Р»РѕРІ РІ СЃРµРєСѓРЅРґР°С…
     """
     if len(timestamps) < 2:
         return []
@@ -69,14 +69,14 @@ def calculate_interarrival_times(timestamps: list[float]) -> list[float]:
 
 def autocorrelation(intervals: list[float], max_lag: int = 20) -> np.ndarray:
     """
-    Вычисляет автокорреляцию интервалов.
+    Р’С‹С‡РёСЃР»СЏРµС‚ Р°РІС‚РѕРєРѕСЂСЂРµР»СЏС†РёСЋ РёРЅС‚РµСЂРІР°Р»РѕРІ.
 
     Args:
-        intervals: список интервалов
-        max_lag: максимальный лаг для расчёта
+        intervals: СЃРїРёСЃРѕРє РёРЅС‚РµСЂРІР°Р»РѕРІ
+        max_lag: РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ Р»Р°Рі РґР»СЏ СЂР°СЃС‡С‘С‚Р°
 
     Returns:
-        массив значений автокорреляции для лагов 1..max_lag
+        РјР°СЃСЃРёРІ Р·РЅР°С‡РµРЅРёР№ Р°РІС‚РѕРєРѕСЂСЂРµР»СЏС†РёРё РґР»СЏ Р»Р°РіРѕРІ 1..max_lag
     """
     n = len(intervals)
     if n < 4:
@@ -87,9 +87,9 @@ def autocorrelation(intervals: list[float], max_lag: int = 20) -> np.ndarray:
     variance = np.var(data)
 
     if variance == 0:
-        return np.ones(max_lag)  # Идеальная корреляция при постоянном интервале
+        return np.ones(max_lag)  # РРґРµР°Р»СЊРЅР°СЏ РєРѕСЂСЂРµР»СЏС†РёСЏ РїСЂРё РїРѕСЃС‚РѕСЏРЅРЅРѕРј РёРЅС‚РµСЂРІР°Р»Рµ
 
-    # Ограничиваем max_lag длиной данных
+    # РћРіСЂР°РЅРёС‡РёРІР°РµРј max_lag РґР»РёРЅРѕР№ РґР°РЅРЅС‹С…
     effective_max_lag = min(max_lag, n - 2)
 
     result = np.zeros(max_lag)
@@ -104,21 +104,21 @@ def autocorrelation(intervals: list[float], max_lag: int = 20) -> np.ndarray:
 
 def calculate_entropy(intervals: list[float], bins: int = 10) -> float:
     """
-    Вычисляет энтропию распределения интервалов.
-    Низкая энтропия → более регулярное поведение → подозрительно.
+    Р’С‹С‡РёСЃР»СЏРµС‚ СЌРЅС‚СЂРѕРїРёСЋ СЂР°СЃРїСЂРµРґРµР»РµРЅРёСЏ РёРЅС‚РµСЂРІР°Р»РѕРІ.
+    РќРёР·РєР°СЏ СЌРЅС‚СЂРѕРїРёСЏ в†’ Р±РѕР»РµРµ СЂРµРіСѓР»СЏСЂРЅРѕРµ РїРѕРІРµРґРµРЅРёРµ в†’ РїРѕРґРѕР·СЂРёС‚РµР»СЊРЅРѕ.
 
     Args:
-        intervals: список интервалов
-        bins: количество бинов для гистограммы
+        intervals: СЃРїРёСЃРѕРє РёРЅС‚РµСЂРІР°Р»РѕРІ
+        bins: РєРѕР»РёС‡РµСЃС‚РІРѕ Р±РёРЅРѕРІ РґР»СЏ РіРёСЃС‚РѕРіСЂР°РјРјС‹
 
     Returns:
-        значение энтропии (биты)
+        Р·РЅР°С‡РµРЅРёРµ СЌРЅС‚СЂРѕРїРёРё (Р±РёС‚С‹)
     """
     if len(intervals) < 2:
         return 0.0
 
     hist, _ = np.histogram(intervals, bins=bins, density=True)
-    # Убираем нулевые бины для расчета энтропии
+    # РЈР±РёСЂР°РµРј РЅСѓР»РµРІС‹Рµ Р±РёРЅС‹ РґР»СЏ СЂР°СЃС‡РµС‚Р° СЌРЅС‚СЂРѕРїРёРё
     hist = hist[hist > 0]
 
     return -np.sum(hist * np.log2(hist))
@@ -129,14 +129,14 @@ def calculate_window_stats(
         max_lag: int = 20
 ) -> WindowStats:
     """
-    Рассчитывает все оконные статистики для Beaconing-детектора.
+    Р Р°СЃСЃС‡РёС‚С‹РІР°РµС‚ РІСЃРµ РѕРєРѕРЅРЅС‹Рµ СЃС‚Р°С‚РёСЃС‚РёРєРё РґР»СЏ Beaconing-РґРµС‚РµРєС‚РѕСЂР°.
 
     Args:
-        timestamps: отсортированные временные метки событий
-        max_lag: максимальный лаг для автокорреляции
+        timestamps: РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Рµ РІСЂРµРјРµРЅРЅС‹Рµ РјРµС‚РєРё СЃРѕР±С‹С‚РёР№
+        max_lag: РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ Р»Р°Рі РґР»СЏ Р°РІС‚РѕРєРѕСЂСЂРµР»СЏС†РёРё
 
     Returns:
-        WindowStats с рассчитанными признаками
+        WindowStats СЃ СЂР°СЃСЃС‡РёС‚Р°РЅРЅС‹РјРё РїСЂРёР·РЅР°РєР°РјРё
     """
     intervals = calculate_interarrival_times(timestamps)
     n_intervals = len(intervals)
@@ -155,22 +155,22 @@ def calculate_window_stats(
     mean_val = np.mean(intervals)
     std_val = np.std(intervals)
 
-    # Коэффициент вариации: std/mean
-    # Низкий CV → регулярные интервалы → подозрительно для Beaconing
+    # РљРѕСЌС„С„РёС†РёРµРЅС‚ РІР°СЂРёР°С†РёРё: std/mean
+    # РќРёР·РєРёР№ CV в†’ СЂРµРіСѓР»СЏСЂРЅС‹Рµ РёРЅС‚РµСЂРІР°Р»С‹ в†’ РїРѕРґРѕР·СЂРёС‚РµР»СЊРЅРѕ РґР»СЏ Beaconing
     cv = std_val / mean_val if mean_val > 0 else 0.0
 
-    # Автокорреляция
+    # РђРІС‚РѕРєРѕСЂСЂРµР»СЏС†РёСЏ
     ac = autocorrelation(intervals, max_lag)
 
     if len(ac) > 0:
-        peak_idx = np.argmax(np.abs(ac))
+        peak_idx = np.argmax(ac)
         peak_value = ac[peak_idx]
         peak_lag = peak_idx + 1
     else:
         peak_lag = 0
         peak_value = 0.0
 
-    # Энтропия
+    # Р­РЅС‚СЂРѕРїРёСЏ
     entropy = calculate_entropy(intervals)
 
     return WindowStats(
