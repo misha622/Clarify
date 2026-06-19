@@ -92,18 +92,28 @@ class TestBeaconingDetector:
         assert result.should_alert is False
         assert "Недостаточно интервалов" in result.reason
     
+    
     def test_beaconing_pattern_without_model(self, detector):
+        """Без модели детектор не должен алертить, даже на beaconing-паттерне."""
         rng = np.random.RandomState(42)
         timestamps = [0.0]
         for _ in range(20):
             timestamps.append(timestamps[-1] + 10.0 + rng.normal(0, 0.5))
         
-        result = detector.detect(timestamps, source_id="test_host")
+        # Временно выгружаем модель
+        saved_model = detector.model
+        detector.model = None
         
-        assert result.is_alert is True  # модель загружена из models/
-        assert result.window_stats.event_count == 21
-        assert result.window_stats.coefficient_of_variation < 0.2
-    
+        try:
+            result = detector.detect(timestamps, source_id="test_host")
+            
+            assert result.is_alert is False
+            assert result.reason == "Модель не загружена"
+            assert result.window_stats.event_count == 21
+            assert result.window_stats.coefficient_of_variation < 0.2
+        finally:
+            # Возвращаем модель
+            detector.model = saved_model
     def test_train_and_detect(self, detector, tmp_path):
         rng = np.random.RandomState(42)
         
@@ -156,4 +166,5 @@ class TestBeaconingDetector:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
 
