@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 import numpy as np
 from src.detectors.dga import DGADetector, DGAFeatures
 

@@ -1,4 +1,4 @@
-﻿\"\"\"
+\"\"\"
 Реэкспорт BeaconingDetector из src.detectors.beaconing.
 Оставлен для обратной совместимости.
 \"\"\"

@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 import numpy as np
 from pathlib import Path
 from src.features.window_stats import (

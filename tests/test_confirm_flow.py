@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from src.ui.confirm_flow import (
     ConfirmFlow, WebhookConfig, FirewallCommand, ActionMethod
 )
