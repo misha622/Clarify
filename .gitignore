@@ -1,0 +1,34 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+*.pyc
+
+# Модели (обученные)
+models/*.json
+models/*.pkl
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Данные
+data/raw/
+data/processed/
+
+# Конфиги с секретами
+config/secrets.yaml
+
+# Логи
+*.log
+
+# Тестовые файлы
+test_wazuh_alerts.json
+
+# OS
+.DS_Store
+Thumbs.db
