@@ -28,7 +28,7 @@ python -m src.models.train_beaconing
 
 # 4. Run the demo
 python -m src.ui.alert_card
-You'll see an alert card with SHAP explanations in your terminal.
+You will see an alert card with SHAP explanations in your terminal.
 
 Example Usage
 1. Train a detector
