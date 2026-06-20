@@ -1,19 +1,20 @@
-"""
-Wazuh Connector для Clarify.
+﻿"""
+Wazuh Connector РґР»СЏ Clarify.
 
-Читает алерты Wazuh из:
-1. Локального файла alerts.json (стандартный вывод Wazuh)
-2. Wazuh API (опционально, если указан URL)
+Р§РёС‚Р°РµС‚ Р°Р»РµСЂС‚С‹ Wazuh РёР·:
+1. Р›РѕРєР°Р»СЊРЅРѕРіРѕ С„Р°Р№Р»Р° alerts.json (СЃС‚Р°РЅРґР°СЂС‚РЅС‹Р№ РІС‹РІРѕРґ Wazuh)
+2. Wazuh API (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ, РµСЃР»Рё СѓРєР°Р·Р°РЅ URL)
 
-Извлекает события аутентификации и DNS-запросы,
-передаёт их в детекторы Clarify (Beaconing, Brute-Force).
+РР·РІР»РµРєР°РµС‚ СЃРѕР±С‹С‚РёСЏ Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёРё Рё DNS-Р·Р°РїСЂРѕСЃС‹,
+РїРµСЂРµРґР°С‘С‚ РёС… РІ РґРµС‚РµРєС‚РѕСЂС‹ Clarify (Beaconing, Brute-Force).
 
-Использование:
+РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ:
     python -m src.connectors.wazuh_connector --alerts-file /var/ossec/logs/alerts/alerts.json
     python -m src.connectors.wazuh_connector --api-url https://wazuh.example.com --api-user foo --api-pass bar
 """
 
 import sys
+import os
 import json
 import time
 import logging
@@ -29,13 +30,13 @@ logger = logging.getLogger(__name__)
 
 class WazuhAlertParser:
     """
-    Парсит сырые алерты Wazuh в структурированные события.
+    РџР°СЂСЃРёС‚ СЃС‹СЂС‹Рµ Р°Р»РµСЂС‚С‹ Wazuh РІ СЃС‚СЂСѓРєС‚СѓСЂРёСЂРѕРІР°РЅРЅС‹Рµ СЃРѕР±С‹С‚РёСЏ.
 
-    Wazuh хранит алерты в /var/ossec/logs/alerts/alerts.json
-    Формат: одна JSON-строка на алерт.
+    Wazuh С…СЂР°РЅРёС‚ Р°Р»РµСЂС‚С‹ РІ /var/ossec/logs/alerts/alerts.json
+    Р¤РѕСЂРјР°С‚: РѕРґРЅР° JSON-СЃС‚СЂРѕРєР° РЅР° Р°Р»РµСЂС‚.
     """
 
-    # Правила Wazuh, которые нас интересуют
+    # РџСЂР°РІРёР»Р° Wazuh, РєРѕС‚РѕСЂС‹Рµ РЅР°СЃ РёРЅС‚РµСЂРµСЃСѓСЋС‚
     AUTH_FAILURE_RULES = {
         "5710",  # sshd: Attempt to login using a non-existent user
         "5712",  # sshd: brute force attempt
@@ -47,30 +48,30 @@ class WazuhAlertParser:
     }
 
     DNS_QUERY_RULES = {
-        "60001",  # DNS query (пользовательское правило)
-        "60002",  # DNS high entropy (пользовательское правило)
+        "60001",  # DNS query (РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРµ РїСЂР°РІРёР»Рѕ)
+        "60002",  # DNS high entropy (РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРµ РїСЂР°РІРёР»Рѕ)
     }
 
     def __init__(self, min_timestamp: float = None):
         """
         Args:
-            min_timestamp: игнорировать алерты старше этого времени
+            min_timestamp: РёРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ Р°Р»РµСЂС‚С‹ СЃС‚Р°СЂС€Рµ СЌС‚РѕРіРѕ РІСЂРµРјРµРЅРё
         """
-        self.min_timestamp = min_timestamp or (time.time() - 86400)  # последние 24ч
+        self.min_timestamp = min_timestamp or (time.time() - 86400)  # РїРѕСЃР»РµРґРЅРёРµ 24С‡
         self.events: list[dict] = []
 
     def parse_alert(self, alert: dict) -> Optional[dict]:
         """
-        Парсит один алерт Wazuh.
+        РџР°СЂСЃРёС‚ РѕРґРёРЅ Р°Р»РµСЂС‚ Wazuh.
 
         Returns:
-            dict с полями:
+            dict СЃ РїРѕР»СЏРјРё:
             - type: "auth_failure" | "dns_query"
             - timestamp: float
             - source_ip: str
-            - metadata: dict (зависит от типа)
+            - metadata: dict (Р·Р°РІРёСЃРёС‚ РѕС‚ С‚РёРїР°)
 
-            или None, если алерт не интересен.
+            РёР»Рё None, РµСЃР»Рё Р°Р»РµСЂС‚ РЅРµ РёРЅС‚РµСЂРµСЃРµРЅ.
         """
         rule = alert.get("rule", {})
         rule_id = str(rule.get("id", ""))
@@ -82,11 +83,11 @@ class WazuhAlertParser:
         except (ValueError, AttributeError):
             timestamp = time.time()
 
-        # Пропускаем старые алерты
+        # РџСЂРѕРїСѓСЃРєР°РµРј СЃС‚Р°СЂС‹Рµ Р°Р»РµСЂС‚С‹
         if timestamp < self.min_timestamp:
             return None
 
-        # ── Brute-Force / Auth Failure ──
+        # в”Ђв”Ђ Brute-Force / Auth Failure в”Ђв”Ђ
         if rule_id in self.AUTH_FAILURE_RULES:
             source_ip = (
                     data.get("srcip")
@@ -109,7 +110,7 @@ class WazuhAlertParser:
                 },
             }
 
-        # ── DNS Query ──
+        # в”Ђв”Ђ DNS Query в”Ђв”Ђ
         if rule_id in self.DNS_QUERY_RULES:
             source_ip = (
                     data.get("srcip")
@@ -134,22 +135,22 @@ class WazuhAlertParser:
 
     def parse_file(self, filepath: str) -> list[dict]:
         """
-        Читает alerts.json и парсит все алерты.
+        Р§РёС‚Р°РµС‚ alerts.json Рё РїР°СЂСЃРёС‚ РІСЃРµ Р°Р»РµСЂС‚С‹.
 
         Args:
-            filepath: путь к alerts.json
+            filepath: РїСѓС‚СЊ Рє alerts.json
 
         Returns:
-            список структурированных событий
+            СЃРїРёСЃРѕРє СЃС‚СЂСѓРєС‚СѓСЂРёСЂРѕРІР°РЅРЅС‹С… СЃРѕР±С‹С‚РёР№
         """
         events = []
         path = Path(filepath)
 
         if not path.exists():
-            logger.error(f"Файл не найден: {filepath}")
+            logger.error(f"Р¤Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ: {filepath}")
             return events
 
-        logger.info(f"Чтение {filepath}...")
+        logger.info(f"Р§С‚РµРЅРёРµ {filepath}...")
 
         with open(filepath, "r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, 1):
@@ -163,15 +164,15 @@ class WazuhAlertParser:
                     if parsed:
                         events.append(parsed)
                 except json.JSONDecodeError:
-                    logger.debug(f"Пропущена строка {line_num}: не JSON")
+                    logger.debug(f"РџСЂРѕРїСѓС‰РµРЅР° СЃС‚СЂРѕРєР° {line_num}: РЅРµ JSON")
                     continue
 
-        logger.info(f"Извлечено {len(events)} событий из {filepath}")
+        logger.info(f"РР·РІР»РµС‡РµРЅРѕ {len(events)} СЃРѕР±С‹С‚РёР№ РёР· {filepath}")
         return events
 
     def group_by_source(self, events: list[dict]) -> dict[str, dict]:
         """
-        Группирует события по source_ip и типу.
+        Р“СЂСѓРїРїРёСЂСѓРµС‚ СЃРѕР±С‹С‚РёСЏ РїРѕ source_ip Рё С‚РёРїСѓ.
 
         Returns:
             {
@@ -198,7 +199,7 @@ class WazuhAlertParser:
 
 
 class WazuhAPIClient:
-    """Клиент для Wazuh REST API (опционально)."""
+    """РљР»РёРµРЅС‚ РґР»СЏ Wazuh REST API (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)."""
 
     def __init__(self, base_url: str, username: str, password: str):
         self.base_url = base_url.rstrip("/")
@@ -207,7 +208,7 @@ class WazuhAPIClient:
         self.token: Optional[str] = None
 
     def authenticate(self) -> bool:
-        """Получает JWT токен."""
+        """РџРѕР»СѓС‡Р°РµС‚ JWT С‚РѕРєРµРЅ."""
         import urllib.request
         import urllib.error
 
@@ -228,16 +229,16 @@ class WazuhAPIClient:
                 data = json.loads(resp.read().decode())
                 self.token = data.get("data", {}).get("token", "")
                 if self.token:
-                    logger.info("Wazuh API: аутентификация успешна")
+                    logger.info("Wazuh API: Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёСЏ СѓСЃРїРµС€РЅР°")
                     return True
 
         except Exception as e:
-            logger.error(f"Wazuh API: ошибка аутентификации: {e}")
+            logger.error(f"Wazuh API: РѕС€РёР±РєР° Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёРё: {e}")
 
         return False
 
     def get_alerts(self, limit: int = 500) -> list[dict]:
-        """Получает последние алерты через API."""
+        """РџРѕР»СѓС‡Р°РµС‚ РїРѕСЃР»РµРґРЅРёРµ Р°Р»РµСЂС‚С‹ С‡РµСЂРµР· API."""
         import urllib.request
 
         if not self.token:
@@ -254,25 +255,25 @@ class WazuhAPIClient:
             with urllib.request.urlopen(req, timeout=30) as resp:
                 data = json.loads(resp.read().decode())
                 alerts = data.get("data", {}).get("alerts", [])
-                logger.info(f"Wazuh API: получено {len(alerts)} алертов")
+                logger.info(f"Wazuh API: РїРѕР»СѓС‡РµРЅРѕ {len(alerts)} Р°Р»РµСЂС‚РѕРІ")
                 return alerts
 
         except Exception as e:
-            logger.error(f"Wazuh API: ошибка получения алертов: {e}")
+            logger.error(f"Wazuh API: РѕС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ Р°Р»РµСЂС‚РѕРІ: {e}")
             return []
 
 
 class ClarifyWazuhRunner:
     """
-    Связывает Wazuh → парсер → детекторы Clarify → карточки алертов.
+    РЎРІСЏР·С‹РІР°РµС‚ Wazuh в†’ РїР°СЂСЃРµСЂ в†’ РґРµС‚РµРєС‚РѕСЂС‹ Clarify в†’ РєР°СЂС‚РѕС‡РєРё Р°Р»РµСЂС‚РѕРІ.
 
-    Полный пайплайн:
-    1. Читает алерты Wazuh (файл или API)
-    2. Парсит в структурированные события
-    3. Группирует по source_ip
-    4. Прогоняет через детекторы (Beaconing, Brute-Force)
-    5. Генерирует SHAP-объяснения
-    6. Выводит карточки алертов
+    РџРѕР»РЅС‹Р№ РїР°Р№РїР»Р°Р№РЅ:
+    1. Р§РёС‚Р°РµС‚ Р°Р»РµСЂС‚С‹ Wazuh (С„Р°Р№Р» РёР»Рё API)
+    2. РџР°СЂСЃРёС‚ РІ СЃС‚СЂСѓРєС‚СѓСЂРёСЂРѕРІР°РЅРЅС‹Рµ СЃРѕР±С‹С‚РёСЏ
+    3. Р“СЂСѓРїРїРёСЂСѓРµС‚ РїРѕ source_ip
+    4. РџСЂРѕРіРѕРЅСЏРµС‚ С‡РµСЂРµР· РґРµС‚РµРєС‚РѕСЂС‹ (Beaconing, Brute-Force)
+    5. Р“РµРЅРµСЂРёСЂСѓРµС‚ SHAP-РѕР±СЉСЏСЃРЅРµРЅРёСЏ
+    6. Р’С‹РІРѕРґРёС‚ РєР°СЂС‚РѕС‡РєРё Р°Р»РµСЂС‚РѕРІ
     """
 
     def __init__(
@@ -289,7 +290,7 @@ class ClarifyWazuhRunner:
         self.api_pass = api_pass
         self.lang = lang
 
-        # Инициализируем компоненты лениво
+        # РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј РєРѕРјРїРѕРЅРµРЅС‚С‹ Р»РµРЅРёРІРѕ
         self._beaconing_detector = None
         self._brute_force_detector = None
         self._shap_explainer_beaconing = None
@@ -299,14 +300,14 @@ class ClarifyWazuhRunner:
         self._cli_renderer = None
 
     def _init_components(self):
-        """Ленивая инициализация компонентов Clarify."""
+        """Р›РµРЅРёРІР°СЏ РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РєРѕРјРїРѕРЅРµРЅС‚РѕРІ Clarify."""
         import xgboost as xgb
         import yaml
         from src.explainers.shap_explainer import ShapExplainer
         from src.rendering.template_renderer import TemplateRenderer
         from src.ui.alert_card import AlertCardBuilder, AlertCardRenderer
 
-        # Конфиг
+        # РљРѕРЅС„РёРі
         with open("config/detectors.yaml", "r") as f:
             config = yaml.safe_load(f)
 
@@ -321,9 +322,9 @@ class ClarifyWazuhRunner:
                 bf_cfg["features"],
                 top_n=3,
             )
-            logger.info("Beaconing модель загружена")
+            logger.info("Beaconing РјРѕРґРµР»СЊ Р·Р°РіСЂСѓР¶РµРЅР°")
         else:
-            logger.warning("Beaconing модель не найдена, пропускаем")
+            logger.warning("Beaconing РјРѕРґРµР»СЊ РЅРµ РЅР°Р№РґРµРЅР°, РїСЂРѕРїСѓСЃРєР°РµРј")
             self._beaconing_model = None
 
         # Brute-Force
@@ -337,12 +338,12 @@ class ClarifyWazuhRunner:
                 bf_cfg["features"],
                 top_n=3,
             )
-            logger.info("Brute-Force модель загружена")
+            logger.info("Brute-Force РјРѕРґРµР»СЊ Р·Р°РіСЂСѓР¶РµРЅР°")
         else:
-            logger.warning("Brute-Force модель не найдена, пропускаем")
+            logger.warning("Brute-Force РјРѕРґРµР»СЊ РЅРµ РЅР°Р№РґРµРЅР°, РїСЂРѕРїСѓСЃРєР°РµРј")
             self._brute_force_model = None
 
-        # Рендерер
+        # Р РµРЅРґРµСЂРµСЂ
         dict_path = f"config/feature_dictionary{'_en' if self.lang == 'en' else ''}.yaml"
         if not Path(dict_path).exists():
             dict_path = "config/feature_dictionary.yaml"
@@ -351,16 +352,16 @@ class ClarifyWazuhRunner:
         self._cli_renderer = AlertCardRenderer(use_colors=True)
 
     def run(self):
-        """Основной цикл: читает алерты, детектит, объясняет."""
+        """РћСЃРЅРѕРІРЅРѕР№ С†РёРєР»: С‡РёС‚Р°РµС‚ Р°Р»РµСЂС‚С‹, РґРµС‚РµРєС‚РёС‚, РѕР±СЉСЏСЃРЅСЏРµС‚."""
         self._init_components()
 
-        # Шаг 1: Получаем алерты
+        # РЁР°Рі 1: РџРѕР»СѓС‡Р°РµРј Р°Р»РµСЂС‚С‹
         parser = WazuhAlertParser()
 
         if self.alerts_file:
             events = parser.parse_file(self.alerts_file)
         elif self.api_url:
-            api = WazuhAPIClient(self.api_url, self.api_user, self.api_pass)
+            api = WazuhAPIClient(self.api_url, self.api_user, self.api_pass or os.environ.get("WAZUH_API_PASSWORD", ""))
             raw_alerts = api.get_alerts()
             events = []
             for alert in raw_alerts:
@@ -368,22 +369,22 @@ class ClarifyWazuhRunner:
                 if parsed:
                     events.append(parsed)
         else:
-            logger.error("Укажите --alerts-file или --api-url")
+            logger.error("РЈРєР°Р¶РёС‚Рµ --alerts-file РёР»Рё --api-url")
             return
 
         if not events:
-            logger.warning("Нет событий для анализа")
+            logger.warning("РќРµС‚ СЃРѕР±С‹С‚РёР№ РґР»СЏ Р°РЅР°Р»РёР·Р°")
             return
 
-        # Шаг 2: Группируем по IP
+        # РЁР°Рі 2: Р“СЂСѓРїРїРёСЂСѓРµРј РїРѕ IP
         groups = parser.group_by_source(events)
-        logger.info(f"Анализ {len(groups)} уникальных IP...")
+        logger.info(f"РђРЅР°Р»РёР· {len(groups)} СѓРЅРёРєР°Р»СЊРЅС‹С… IP...")
 
-        # Шаг 3: Прогоняем через детекторы
+        # РЁР°Рі 3: РџСЂРѕРіРѕРЅСЏРµРј С‡РµСЂРµР· РґРµС‚РµРєС‚РѕСЂС‹
         alerts_found = 0
 
         for ip, data in groups.items():
-            # ── Brute-Force ──
+            # в”Ђв”Ђ Brute-Force в”Ђв”Ђ
             auth_events = data["auth_failures"]
             if len(auth_events) >= 10 and self._brute_force_model:
                 timestamps = [e["timestamp"] for e in auth_events]
@@ -422,7 +423,7 @@ class ClarifyWazuhRunner:
                     print(self._cli_renderer.render(card))
                     alerts_found += 1
 
-            # ── Beaconing ──
+            # в”Ђв”Ђ Beaconing в”Ђв”Ђ
             dns_events = data["dns_queries"]
             if len(dns_events) >= 15 and self._beaconing_model:
                 timestamps = sorted([e["timestamp"] for e in dns_events])
@@ -465,27 +466,27 @@ class ClarifyWazuhRunner:
                         print(self._cli_renderer.render(card))
                         alerts_found += 1
 
-        logger.info(f"Анализ завершён. Найдено алертов: {alerts_found}")
+        logger.info(f"РђРЅР°Р»РёР· Р·Р°РІРµСЂС€С‘РЅ. РќР°Р№РґРµРЅРѕ Р°Р»РµСЂС‚РѕРІ: {alerts_found}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Clarify Wazuh Connector — анализ алертов Wazuh"
+        description="Clarify Wazuh Connector вЂ” Р°РЅР°Р»РёР· Р°Р»РµСЂС‚РѕРІ Wazuh"
     )
     parser.add_argument(
         "--alerts-file",
-        help="Путь к alerts.json Wazuh (обычно /var/ossec/logs/alerts/alerts.json)",
+        help="РџСѓС‚СЊ Рє alerts.json Wazuh (РѕР±С‹С‡РЅРѕ /var/ossec/logs/alerts/alerts.json)",
     )
     parser.add_argument(
         "--api-url",
-        help="URL Wazuh API (например https://wazuh.example.com)",
+        help="URL Wazuh API (РЅР°РїСЂРёРјРµСЂ https://wazuh.example.com)",
     )
-    parser.add_argument("--api-user", help="Пользователь Wazuh API")
-    parser.add_argument("--api-pass", help="Пароль Wazuh API")
+    parser.add_argument("--api-user", help="РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ Wazuh API")
+    parser.add_argument("--api-pass", help="РџР°СЂРѕР»СЊ Wazuh API")
     parser.add_argument("--lang", default="ru", choices=["ru", "en"],
-                        help="Язык объяснений")
+                        help="РЇР·С‹Рє РѕР±СЉСЏСЃРЅРµРЅРёР№")
     parser.add_argument("--log-level", default="INFO",
-                        help="Уровень логирования")
+                        help="РЈСЂРѕРІРµРЅСЊ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ")
 
     args = parser.parse_args()
 
