@@ -12,7 +12,6 @@ class TestFirewallCommand:
         assert "203.0.113.45" in ipt
         assert "DROP" in ipt
 
-    
     def test_escape_quotes(self):
         cmd = FirewallCommand(ip="203.0.113.45", reason='Test "quoted" reason', duration_hours=24)
         ipt = cmd.iptables
@@ -26,6 +25,22 @@ class TestFirewallCommand:
         win = cmd.windows_firewall
         assert "New-NetFirewallRule" in win
         assert "203.0.113.45" in win
+
+    def test_valid_ipv6_accepted(self):
+        cmd = FirewallCommand(ip="2001:db8::1", reason="Test", duration_hours=24)
+        assert "2001:db8::1" in cmd.iptables
+
+    def test_invalid_ip_rejected(self):
+        with pytest.raises(ValueError):
+            FirewallCommand(ip="not-an-ip", reason="Test", duration_hours=24)
+
+    def test_shell_injection_attempt_rejected(self):
+        with pytest.raises(ValueError):
+            FirewallCommand(
+                ip="1.2.3.4; rm -rf /",
+                reason="Test",
+                duration_hours=24,
+            )
 
 
 class TestConfirmFlow:
@@ -56,7 +71,7 @@ class TestConfirmFlow:
         flow = ConfirmFlow()
         flow.execute_block("10.0.0.1", "test", "alert-1", operator="test")
         flow.execute_block("10.0.0.2", "test", "alert-2", operator="test")
-        
+
         decisions = flow.get_decisions()
         assert len(decisions) == 2
         assert decisions[0]["ip"] == "10.0.0.1"
@@ -64,7 +79,7 @@ class TestConfirmFlow:
     def test_block_result_structure(self):
         flow = ConfirmFlow()
         result = flow.execute_block("10.0.0.1", "test reason", "alert-42")
-        
+
         assert result.action_id == "block_ip"
         assert result.success is True
         assert result.message is not None
@@ -72,4 +87,3 @@ class TestConfirmFlow:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

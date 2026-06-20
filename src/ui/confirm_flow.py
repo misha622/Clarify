@@ -32,6 +32,20 @@ class FirewallCommand:
     reason: str
     duration_hours: int = 24
 
+    def __post_init__(self):
+        if not self._is_valid_ip(self.ip):
+            raise ValueError(f"Невалидный IP-адрес: {self.ip!r}")
+
+    @staticmethod
+    def _is_valid_ip(value: str) -> bool:
+        """Проверяет, что строка — валидный IPv4 или IPv6 адрес."""
+        import ipaddress
+        try:
+            ipaddress.ip_address(value)
+            return True
+        except ValueError:
+            return False
+
     @staticmethod
     def _escape_comment(text: str) -> str:
         """Экранирует кавычки в комментарии для shell."""
