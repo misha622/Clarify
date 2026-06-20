@@ -1,12 +1,12 @@
-"""
-Confirm-flow РґР»СЏ РґРµР№СЃС‚РІРёР№ РЅР°Рґ Р°Р»РµСЂС‚Р°РјРё Clarify.
+﻿"""
+Confirm-flow Р Т‘Р В»РЎРЏ Р Т‘Р ВµР в„–РЎРѓРЎвЂљР Р†Р С‘Р в„– Р Р…Р В°Р Т‘ Р В°Р В»Р ВµРЎР‚РЎвЂљР В°Р СР С‘ Clarify.
 
-Р РµР°Р»РёР·СѓРµС‚ Human-in-the-loop:
-- РљРЅРѕРїРєР° "Р—Р°Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ" РќР• РёСЃРїРѕР»РЅСЏРµС‚ РґРµР№СЃС‚РІРёРµ РЅР°РїСЂСЏРјСѓСЋ
-- РћС‚РєСЂС‹РІР°РµС‚ confirm-flow: РјРѕРґР°Р»СЊРЅРѕРµ РѕРєРЅРѕ в†’ webhook РёР»Рё РєРѕРїРёСЂРѕРІР°РЅРёРµ РєРѕРјР°РЅРґС‹
-- Webhook РїСЂРѕРІРµСЂСЏРµС‚СЃСЏ РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё РєРѕРЅС„РёРіР°
-- Р•СЃР»Рё webhook РЅРµ РЅР°СЃС‚СЂРѕРµРЅ вЂ” Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РїРѕРєР°Р·С‹РІР°РµС‚ РєРѕРјР°РЅРґСѓ РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ
-- Р§РµРєР±РѕРєСЃ "РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ webhook" РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РїСЂРё РІР°Р»РёРґРЅРѕРј webhook URL
+Р В Р ВµР В°Р В»Р С‘Р В·РЎС“Р ВµРЎвЂљ Human-in-the-loop:
+- Р С™Р Р…Р С•Р С—Р С”Р В° "Р вЂ”Р В°Р В±Р В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р В°РЎвЂљРЎРЉ" Р СњР вЂў Р С‘РЎРѓР С—Р С•Р В»Р Р…РЎРЏР ВµРЎвЂљ Р Т‘Р ВµР в„–РЎРѓРЎвЂљР Р†Р С‘Р Вµ Р Р…Р В°Р С—РЎР‚РЎРЏР СРЎС“РЎР‹
+- Р С›РЎвЂљР С”РЎР‚РЎвЂ№Р Р†Р В°Р ВµРЎвЂљ confirm-flow: Р СР С•Р Т‘Р В°Р В»РЎРЉР Р…Р С•Р Вµ Р С•Р С”Р Р…Р С• РІвЂ вЂ™ webhook Р С‘Р В»Р С‘ Р С”Р С•Р С—Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘Р Вµ Р С”Р С•Р СР В°Р Р…Р Т‘РЎвЂ№
+- Webhook Р С—РЎР‚Р С•Р Р†Р ВµРЎР‚РЎРЏР ВµРЎвЂљРЎРѓРЎРЏ Р С—РЎР‚Р С‘ РЎРѓР С•РЎвЂ¦РЎР‚Р В°Р Р…Р ВµР Р…Р С‘Р С‘ Р С”Р С•Р Р…РЎвЂћР С‘Р С–Р В°
+- Р вЂўРЎРѓР В»Р С‘ webhook Р Р…Р Вµ Р Р…Р В°РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р… РІР‚вЂќ Р В°Р Р†РЎвЂљР С•Р СР В°РЎвЂљР С‘РЎвЂЎР ВµРЎРѓР С”Р С‘ Р С—Р С•Р С”Р В°Р В·РЎвЂ№Р Р†Р В°Р ВµРЎвЂљ Р С”Р С•Р СР В°Р Р…Р Т‘РЎС“ Р Т‘Р В»РЎРЏ Р С”Р С•Р С—Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ
+- Р В§Р ВµР С”Р В±Р С•Р С”РЎРѓ "Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·Р С•Р Р†Р В°РЎвЂљРЎРЉ webhook" Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р ВµР Р… РЎвЂљР С•Р В»РЎРЉР С”Р С• Р С—РЎР‚Р С‘ Р Р†Р В°Р В»Р С‘Р Т‘Р Р…Р С•Р С webhook URL
 """
 
 import json
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class ActionMethod(Enum):
-    """РЎРїРѕСЃРѕР± РёСЃРїРѕР»РЅРµРЅРёСЏ РґРµР№СЃС‚РІРёСЏ."""
+    """Р РЋР С—Р С•РЎРѓР С•Р В± Р С‘РЎРѓР С—Р С•Р В»Р Р…Р ВµР Р…Р С‘РЎРЏ Р Т‘Р ВµР в„–РЎРѓРЎвЂљР Р†Р С‘РЎРЏ."""
     WEBHOOK = "webhook"
     COPY_COMMAND = "copy_command"
     NONE = "none"
@@ -27,14 +27,14 @@ class ActionMethod(Enum):
 
 @dataclass
 class FirewallCommand:
-    """Команда для блокировки IP на разных фаерволах."""
+    """РљРѕРјР°РЅРґР° РґР»СЏ Р±Р»РѕРєРёСЂРѕРІРєРё IP РЅР° СЂР°Р·РЅС‹С… С„Р°РµСЂРІРѕР»Р°С…."""
     
     @staticmethod
     def _escape_comment(text: str) -> str:
-        """Экранирует кавычки в комментарии для shell."""
+        """Р­РєСЂР°РЅРёСЂСѓРµС‚ РєР°РІС‹С‡РєРё РІ РєРѕРјРјРµРЅС‚Р°СЂРёРё РґР»СЏ shell."""
         return text.replace('"', '\\"').replace("'", "'\\''")
     
-    """РљРѕРјР°РЅРґР° РґР»СЏ Р±Р»РѕРєРёСЂРѕРІРєРё IP РЅР° СЂР°Р·РЅС‹С… С„Р°РµСЂРІРѕР»Р°С…."""
+    """Р С™Р С•Р СР В°Р Р…Р Т‘Р В° Р Т‘Р В»РЎРЏ Р В±Р В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р С”Р С‘ IP Р Р…Р В° РЎР‚Р В°Р В·Р Р…РЎвЂ№РЎвЂ¦ РЎвЂћР В°Р ВµРЎР‚Р Р†Р С•Р В»Р В°РЎвЂ¦."""
     ip: str
     reason: str
     duration_hours: int = 24
@@ -55,7 +55,7 @@ class FirewallCommand:
 
     @property
     def ufw(self) -> str:
-        return f"ufw deny from {self.ip} comment 'Clarify: {self.reason}'"
+        return f"ufw deny from {self.ip} comment 'Clarify: {self._escape_comment(self.reason)}'"
 
     @property
     def windows_firewall(self) -> str:
@@ -65,7 +65,7 @@ class FirewallCommand:
         )
 
     def get_command(self, firewall_type: str = "iptables") -> str:
-        """Р’РѕР·РІСЂР°С‰Р°РµС‚ РєРѕРјР°РЅРґСѓ РґР»СЏ СѓРєР°Р·Р°РЅРЅРѕРіРѕ С‚РёРїР° С„Р°РµСЂРІРѕР»Р°."""
+        """Р вЂ™Р С•Р В·Р Р†РЎР‚Р В°РЎвЂ°Р В°Р ВµРЎвЂљ Р С”Р С•Р СР В°Р Р…Р Т‘РЎС“ Р Т‘Р В»РЎРЏ РЎС“Р С”Р В°Р В·Р В°Р Р…Р Р…Р С•Р С–Р С• РЎвЂљР С‘Р С—Р В° РЎвЂћР В°Р ВµРЎР‚Р Р†Р С•Р В»Р В°."""
         commands = {
             "iptables": self.iptables,
             "firewalld": self.firewall_cmd,
@@ -77,7 +77,7 @@ class FirewallCommand:
 
 @dataclass
 class WebhookConfig:
-    """РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ webhook РґР»СЏ Р°РІС‚Рѕ-Р±Р»РѕРєРёСЂРѕРІРєРё."""
+    """Р С™Р С•Р Р…РЎвЂћР С‘Р С–РЎС“РЎР‚Р В°РЎвЂ Р С‘РЎРЏ webhook Р Т‘Р В»РЎРЏ Р В°Р Р†РЎвЂљР С•-Р В±Р В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р С”Р С‘."""
     url: str
     method: str = "POST"
     headers: dict = None
@@ -91,7 +91,7 @@ class WebhookConfig:
 
 @dataclass
 class ConfirmFlowResult:
-    """Р РµР·СѓР»СЊС‚Р°С‚ confirm-flow."""
+    """Р В Р ВµР В·РЎС“Р В»РЎРЉРЎвЂљР В°РЎвЂљ confirm-flow."""
     action_id: str
     method: ActionMethod
     success: bool
@@ -102,13 +102,13 @@ class ConfirmFlowResult:
 
 class ConfirmFlow:
     """
-    РћР±СЂР°Р±РѕС‚С‡РёРє confirm-flow РґР»СЏ РґРµР№СЃС‚РІРёР№.
+    Р С›Р В±РЎР‚Р В°Р В±Р С•РЎвЂљРЎвЂЎР С‘Р С” confirm-flow Р Т‘Р В»РЎРЏ Р Т‘Р ВµР в„–РЎРѓРЎвЂљР Р†Р С‘Р в„–.
 
-    РџСЂР°РІРёР»Р°:
-    1. Р•СЃР»Рё webhook РЅР°СЃС‚СЂРѕРµРЅ Рё РІР°Р»РёРґРµРЅ в†’ РѕС‚РїСЂР°РІР»СЏРµС‚ POST
-    2. Р•СЃР»Рё webhook РќР• РЅР°СЃС‚СЂРѕРµРЅ в†’ РїРѕРєР°Р·С‹РІР°РµС‚ РєРѕРјР°РЅРґСѓ РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ
-    3. Р§РµРєР±РѕРєСЃ "РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ webhook" РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РїСЂРё РІР°Р»РёРґРЅРѕРј webhook
-    4. Р’СЃРµ СЂРµС€РµРЅРёСЏ Р»РѕРіРёСЂСѓСЋС‚СЃСЏ
+    Р СџРЎР‚Р В°Р Р†Р С‘Р В»Р В°:
+    1. Р вЂўРЎРѓР В»Р С‘ webhook Р Р…Р В°РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р… Р С‘ Р Р†Р В°Р В»Р С‘Р Т‘Р ВµР Р… РІвЂ вЂ™ Р С•РЎвЂљР С—РЎР‚Р В°Р Р†Р В»РЎРЏР ВµРЎвЂљ POST
+    2. Р вЂўРЎРѓР В»Р С‘ webhook Р СњР вЂў Р Р…Р В°РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р… РІвЂ вЂ™ Р С—Р С•Р С”Р В°Р В·РЎвЂ№Р Р†Р В°Р ВµРЎвЂљ Р С”Р С•Р СР В°Р Р…Р Т‘РЎС“ Р Т‘Р В»РЎРЏ Р С”Р С•Р С—Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ
+    3. Р В§Р ВµР С”Р В±Р С•Р С”РЎРѓ "Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·Р С•Р Р†Р В°РЎвЂљРЎРЉ webhook" Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р ВµР Р… РЎвЂљР С•Р В»РЎРЉР С”Р С• Р С—РЎР‚Р С‘ Р Р†Р В°Р В»Р С‘Р Т‘Р Р…Р С•Р С webhook
+    4. Р вЂ™РЎРѓР Вµ РЎР‚Р ВµРЎв‚¬Р ВµР Р…Р С‘РЎРЏ Р В»Р С•Р С–Р С‘РЎР‚РЎС“РЎР‹РЎвЂљРЎРѓРЎРЏ
     """
 
     def __init__(
@@ -118,8 +118,8 @@ class ConfirmFlow:
     ):
         """
         Args:
-            webhook_config: РєРѕРЅС„РёРіСѓСЂР°С†РёСЏ webhook (None = РЅРµ РЅР°СЃС‚СЂРѕРµРЅ)
-            default_firewall: С‚РёРї С„Р°РµСЂРІРѕР»Р° РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РґР»СЏ РєРѕРјР°РЅРґ
+            webhook_config: Р С”Р С•Р Р…РЎвЂћР С‘Р С–РЎС“РЎР‚Р В°РЎвЂ Р С‘РЎРЏ webhook (None = Р Р…Р Вµ Р Р…Р В°РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р…)
+            default_firewall: РЎвЂљР С‘Р С— РЎвЂћР В°Р ВµРЎР‚Р Р†Р С•Р В»Р В° Р С—Р С• РЎС“Р СР С•Р В»РЎвЂЎР В°Р Р…Р С‘РЎР‹ Р Т‘Р В»РЎРЏ Р С”Р С•Р СР В°Р Р…Р Т‘
         """
         self.webhook_config = webhook_config
         self.default_firewall = default_firewall
@@ -127,14 +127,14 @@ class ConfirmFlow:
 
     def validate_webhook(self) -> tuple[bool, str]:
         """
-        РџСЂРѕРІРµСЂСЏРµС‚ РґРѕСЃС‚СѓРїРЅРѕСЃС‚СЊ webhook URL.
-        РћС‚РїСЂР°РІР»СЏРµС‚ С‚РµСЃС‚РѕРІС‹Р№ POST Рё Р¶РґС‘С‚ 2xx.
+        Р СџРЎР‚Р С•Р Р†Р ВµРЎР‚РЎРЏР ВµРЎвЂљ Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р Р…Р С•РЎРѓРЎвЂљРЎРЉ webhook URL.
+        Р С›РЎвЂљР С—РЎР‚Р В°Р Р†Р В»РЎРЏР ВµРЎвЂљ РЎвЂљР ВµРЎРѓРЎвЂљР С•Р Р†РЎвЂ№Р в„– POST Р С‘ Р В¶Р Т‘РЎвЂРЎвЂљ 2xx.
 
         Returns:
-            (СѓСЃРїРµС…, СЃРѕРѕР±С‰РµРЅРёРµ)
+            (РЎС“РЎРѓР С—Р ВµРЎвЂ¦, РЎРѓР С•Р С•Р В±РЎвЂ°Р ВµР Р…Р С‘Р Вµ)
         """
         if not self.webhook_config or not self.webhook_config.url:
-            return False, "Webhook URL РЅРµ РЅР°СЃС‚СЂРѕРµРЅ"
+            return False, "Webhook URL Р Р…Р Вµ Р Р…Р В°РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р…"
 
         try:
             import urllib.request
@@ -156,14 +156,14 @@ class ConfirmFlow:
             with urllib.request.urlopen(req, timeout=self.webhook_config.timeout_seconds) as resp:
                 if 200 <= resp.status < 300:
                     self.webhook_config.validated = True
-                    return True, f"Webhook РґРѕСЃС‚СѓРїРµРЅ (status={resp.status})"
+                    return True, f"Webhook Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р ВµР Р… (status={resp.status})"
                 else:
-                    return False, f"Webhook РІРµСЂРЅСѓР» СЃС‚Р°С‚СѓСЃ {resp.status}"
+                    return False, f"Webhook Р Р†Р ВµРЎР‚Р Р…РЎС“Р В» РЎРѓРЎвЂљР В°РЎвЂљРЎС“РЎРѓ {resp.status}"
 
         except urllib.error.URLError as e:
-            return False, f"Webhook РЅРµРґРѕСЃС‚СѓРїРµРЅ: {e.reason}"
+            return False, f"Webhook Р Р…Р ВµР Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р ВµР Р…: {e.reason}"
         except Exception as e:
-            return False, f"РћС€РёР±РєР° РїСЂРѕРІРµСЂРєРё webhook: {e}"
+            return False, f"Р С›РЎв‚¬Р С‘Р В±Р С”Р В° Р С—РЎР‚Р С•Р Р†Р ВµРЎР‚Р С”Р С‘ webhook: {e}"
 
     def execute_block(
             self,
@@ -174,19 +174,19 @@ class ConfirmFlow:
             operator: str = "unknown",
     ) -> ConfirmFlowResult:
         """
-        Р’С‹РїРѕР»РЅСЏРµС‚ Р±Р»РѕРєРёСЂРѕРІРєСѓ IP С‡РµСЂРµР· confirm-flow.
+        Р вЂ™РЎвЂ№Р С—Р С•Р В»Р Р…РЎРЏР ВµРЎвЂљ Р В±Р В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р С”РЎС“ IP РЎвЂЎР ВµРЎР‚Р ВµР В· confirm-flow.
 
         Args:
-            ip: IP РґР»СЏ Р±Р»РѕРєРёСЂРѕРІРєРё
-            reason: РїСЂРёС‡РёРЅР° (РёР· SHAP-РѕР±СЉСЏСЃРЅРµРЅРёСЏ)
-            alert_id: ID Р°Р»РµСЂС‚Р°
-            duration_hours: РґР»РёС‚РµР»СЊРЅРѕСЃС‚СЊ Р±Р»РѕРєРёСЂРѕРІРєРё
-            operator: РєС‚Рѕ РІС‹РїРѕР»РЅРёР» РґРµР№СЃС‚РІРёРµ
+            ip: IP Р Т‘Р В»РЎРЏ Р В±Р В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р С”Р С‘
+            reason: Р С—РЎР‚Р С‘РЎвЂЎР С‘Р Р…Р В° (Р С‘Р В· SHAP-Р С•Р В±РЎР‰РЎРЏРЎРѓР Р…Р ВµР Р…Р С‘РЎРЏ)
+            alert_id: ID Р В°Р В»Р ВµРЎР‚РЎвЂљР В°
+            duration_hours: Р Т‘Р В»Р С‘РЎвЂљР ВµР В»РЎРЉР Р…Р С•РЎРѓРЎвЂљРЎРЉ Р В±Р В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р С”Р С‘
+            operator: Р С”РЎвЂљР С• Р Р†РЎвЂ№Р С—Р С•Р В»Р Р…Р С‘Р В» Р Т‘Р ВµР в„–РЎРѓРЎвЂљР Р†Р С‘Р Вµ
 
         Returns:
             ConfirmFlowResult
         """
-        # Р›РѕРіРёСЂСѓРµРј СЂРµС€РµРЅРёРµ
+        # Р вЂєР С•Р С–Р С‘РЎР‚РЎС“Р ВµР С РЎР‚Р ВµРЎв‚¬Р ВµР Р…Р С‘Р Вµ
         decision = {
             "action": "block_ip",
             "ip": ip,
@@ -197,7 +197,7 @@ class ConfirmFlow:
             "timestamp": __import__("time").time(),
         }
 
-        # Р•СЃР»Рё webhook РЅР°СЃС‚СЂРѕРµРЅ Рё РІР°Р»РёРґРµРЅ вЂ” РѕС‚РїСЂР°РІР»СЏРµРј
+        # Р вЂўРЎРѓР В»Р С‘ webhook Р Р…Р В°РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р… Р С‘ Р Р†Р В°Р В»Р С‘Р Т‘Р ВµР Р… РІР‚вЂќ Р С•РЎвЂљР С—РЎР‚Р В°Р Р†Р В»РЎРЏР ВµР С
         if (
                 self.webhook_config
                 and self.webhook_config.url
@@ -205,7 +205,7 @@ class ConfirmFlow:
         ):
             return self._send_webhook(ip, reason, alert_id, duration_hours, decision)
 
-        # РРЅР°С‡Рµ вЂ” РІРѕР·РІСЂР°С‰Р°РµРј РєРѕРјР°РЅРґСѓ РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ
+        # Р ВР Р…Р В°РЎвЂЎР Вµ РІР‚вЂќ Р Р†Р С•Р В·Р Р†РЎР‚Р В°РЎвЂ°Р В°Р ВµР С Р С”Р С•Р СР В°Р Р…Р Т‘РЎС“ Р Т‘Р В»РЎРЏ Р С”Р С•Р С—Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ
         fw_cmd = FirewallCommand(ip=ip, reason=reason, duration_hours=duration_hours)
         command = fw_cmd.get_command(self.default_firewall)
 
@@ -215,15 +215,15 @@ class ConfirmFlow:
         self.decisions_log.append(decision)
 
         logger.info(
-            f"Р‘Р»РѕРєРёСЂРѕРІРєР° {ip} (alert={alert_id}): "
-            f"webhook РЅРµ РЅР°СЃС‚СЂРѕРµРЅ, РєРѕРјР°РЅРґР° РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ"
+            f"Р вЂР В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р С”Р В° {ip} (alert={alert_id}): "
+            f"webhook Р Р…Р Вµ Р Р…Р В°РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р…, Р С”Р С•Р СР В°Р Р…Р Т‘Р В° Р Т‘Р В»РЎРЏ Р С”Р С•Р С—Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ"
         )
 
         return ConfirmFlowResult(
             action_id="block_ip",
             method=ActionMethod.COPY_COMMAND,
             success=True,
-            message="РљРѕРјР°РЅРґР° РіРѕС‚РѕРІР° РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ",
+            message="Р С™Р С•Р СР В°Р Р…Р Т‘Р В° Р С–Р С•РЎвЂљР С•Р Р†Р В° Р Т‘Р В»РЎРЏ Р С”Р С•Р С—Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ",
             command=command,
         )
 
@@ -235,7 +235,7 @@ class ConfirmFlow:
             duration_hours: int,
             decision: dict,
     ) -> ConfirmFlowResult:
-        """РћС‚РїСЂР°РІР»СЏРµС‚ webhook РЅР° Р±Р»РѕРєРёСЂРѕРІРєСѓ."""
+        """Р С›РЎвЂљР С—РЎР‚Р В°Р Р†Р В»РЎРЏР ВµРЎвЂљ webhook Р Р…Р В° Р В±Р В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р С”РЎС“."""
         try:
             import urllib.request
             import urllib.error
@@ -265,13 +265,13 @@ class ConfirmFlow:
                 decision["webhook_response"] = response_body[:500]
                 self.decisions_log.append(decision)
 
-                logger.info(f"Webhook РѕС‚РїСЂР°РІР»РµРЅ: {ip} Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ (alert={alert_id})")
+                logger.info(f"Webhook Р С•РЎвЂљР С—РЎР‚Р В°Р Р†Р В»Р ВµР Р…: {ip} Р В·Р В°Р В±Р В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р В°Р Р… (alert={alert_id})")
 
                 return ConfirmFlowResult(
                     action_id="block_ip",
                     method=ActionMethod.WEBHOOK,
                     success=True,
-                    message=f"IP {ip} Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ С‡РµСЂРµР· webhook",
+                    message=f"IP {ip} Р В·Р В°Р В±Р В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р В°Р Р… РЎвЂЎР ВµРЎР‚Р ВµР В· webhook",
                     webhook_response={
                         "status": resp.status,
                         "body": response_body[:200],
@@ -283,25 +283,25 @@ class ConfirmFlow:
             decision["error"] = str(e.reason)
             self.decisions_log.append(decision)
 
-            logger.error(f"РћС€РёР±РєР° webhook РґР»СЏ {ip}: {e.reason}")
+            logger.error(f"Р С›РЎв‚¬Р С‘Р В±Р С”Р В° webhook Р Т‘Р В»РЎРЏ {ip}: {e.reason}")
 
-            # Fallback: РІРѕР·РІСЂР°С‰Р°РµРј РєРѕРјР°РЅРґСѓ
+            # Fallback: Р Р†Р С•Р В·Р Р†РЎР‚Р В°РЎвЂ°Р В°Р ВµР С Р С”Р С•Р СР В°Р Р…Р Т‘РЎС“
             fw_cmd = FirewallCommand(ip=ip, reason=reason, duration_hours=duration_hours)
 
             return ConfirmFlowResult(
                 action_id="block_ip",
                 method=ActionMethod.COPY_COMMAND,
                 success=False,
-                message=f"Webhook РЅРµРґРѕСЃС‚СѓРїРµРЅ ({e.reason}). РСЃРїРѕР»СЊР·СѓР№С‚Рµ РєРѕРјР°РЅРґСѓ РІСЂСѓС‡РЅСѓСЋ.",
+                message=f"Webhook Р Р…Р ВµР Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р ВµР Р… ({e.reason}). Р ВРЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р в„–РЎвЂљР Вµ Р С”Р С•Р СР В°Р Р…Р Т‘РЎС“ Р Р†РЎР‚РЎС“РЎвЂЎР Р…РЎС“РЎР‹.",
                 command=fw_cmd.get_command(self.default_firewall),
             )
 
     def get_decisions(self, limit: int = 50) -> list[dict]:
-        """Р’РѕР·РІСЂР°С‰Р°РµС‚ РїРѕСЃР»РµРґРЅРёРµ N СЂРµС€РµРЅРёР№ РёР· Р»РѕРіР°."""
+        """Р вЂ™Р С•Р В·Р Р†РЎР‚Р В°РЎвЂ°Р В°Р ВµРЎвЂљ Р С—Р С•РЎРѓР В»Р ВµР Т‘Р Р…Р С‘Р Вµ N РЎР‚Р ВµРЎв‚¬Р ВµР Р…Р С‘Р в„– Р С‘Р В· Р В»Р С•Р С–Р В°."""
         return self.decisions_log[-limit:]
 
     def is_webhook_available(self) -> bool:
-        """Р”РѕСЃС‚СѓРїРµРЅ Р»Рё webhook (РЅР°СЃС‚СЂРѕРµРЅ + РїСЂРѕРІР°Р»РёРґРёСЂРѕРІР°РЅ)."""
+        """Р вЂќР С•РЎРѓРЎвЂљРЎС“Р С—Р ВµР Р… Р В»Р С‘ webhook (Р Р…Р В°РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р… + Р С—РЎР‚Р С•Р Р†Р В°Р В»Р С‘Р Т‘Р С‘РЎР‚Р С•Р Р†Р В°Р Р…)."""
         return (
                 self.webhook_config is not None
                 and bool(self.webhook_config.url)
@@ -310,45 +310,46 @@ class ConfirmFlow:
 
 
 # ------------------------------------------------------------------
-# РўРµСЃС‚
+# Р СћР ВµРЎРѓРЎвЂљ
 # ------------------------------------------------------------------
 if __name__ == "__main__":
     print("=" * 60)
-    print("РўРµСЃС‚ Confirm Flow")
+    print("Р СћР ВµРЎРѓРЎвЂљ Confirm Flow")
     print()
 
-    # РўРµСЃС‚ 1: Р‘РµР· webhook вЂ” РєРѕРјР°РЅРґР° РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ
-    print("1. Р‘РµР· webhook:")
+    # Р СћР ВµРЎРѓРЎвЂљ 1: Р вЂР ВµР В· webhook РІР‚вЂќ Р С”Р С•Р СР В°Р Р…Р Т‘Р В° Р Т‘Р В»РЎРЏ Р С”Р С•Р С—Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ
+    print("1. Р вЂР ВµР В· webhook:")
     flow = ConfirmFlow(webhook_config=None)
     result = flow.execute_block(
         ip="203.0.113.45",
-        reason="Brute-force RDP, С‡Р°СЃС‚РѕС‚Р° 404 РІ 11Г— РІС‹С€Рµ РЅРѕСЂРјС‹ (Clarify SHAP)",
+        reason="Brute-force RDP, РЎвЂЎР В°РЎРѓРЎвЂљР С•РЎвЂљР В° 404 Р Р† 11Р“вЂ” Р Р†РЎвЂ№РЎв‚¬Р Вµ Р Р…Р С•РЎР‚Р СРЎвЂ№ (Clarify SHAP)",
         alert_id="alert-beaconing-203-0-113-45-12345",
         operator="admin",
     )
-    print(f"   РњРµС‚РѕРґ: {result.method.value}")
-    print(f"   РЈСЃРїРµС…: {result.success}")
-    print(f"   РЎРѕРѕР±С‰РµРЅРёРµ: {result.message}")
-    print(f"   РљРѕРјР°РЅРґР°:")
+    print(f"   Р СљР ВµРЎвЂљР С•Р Т‘: {result.method.value}")
+    print(f"   Р Р€РЎРѓР С—Р ВµРЎвЂ¦: {result.success}")
+    print(f"   Р РЋР С•Р С•Р В±РЎвЂ°Р ВµР Р…Р С‘Р Вµ: {result.message}")
+    print(f"   Р С™Р С•Р СР В°Р Р…Р Т‘Р В°:")
     print(f"   $ {result.command}")
 
     print()
 
-    # РўРµСЃС‚ 2: Р’Р°Р»РёРґР°С†РёСЏ webhook (Р·Р°РІРµРґРѕРјРѕ РЅРµРґРѕСЃС‚СѓРїРЅС‹Р№)
-    print("2. Р’Р°Р»РёРґР°С†РёСЏ РЅРµРґРѕСЃС‚СѓРїРЅРѕРіРѕ webhook:")
+    # Р СћР ВµРЎРѓРЎвЂљ 2: Р вЂ™Р В°Р В»Р С‘Р Т‘Р В°РЎвЂ Р С‘РЎРЏ webhook (Р В·Р В°Р Р†Р ВµР Т‘Р С•Р СР С• Р Р…Р ВµР Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р Р…РЎвЂ№Р в„–)
+    print("2. Р вЂ™Р В°Р В»Р С‘Р Т‘Р В°РЎвЂ Р С‘РЎРЏ Р Р…Р ВµР Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р Р…Р С•Р С–Р С• webhook:")
     flow2 = ConfirmFlow(
         webhook_config=WebhookConfig(url="http://localhost:99999/webhook")
     )
     valid, msg = flow2.validate_webhook()
-    print(f"   Р”РѕСЃС‚СѓРїРµРЅ: {valid}")
-    print(f"   РЎРѕРѕР±С‰РµРЅРёРµ: {msg}")
-    print(f"   Р§РµРєР±РѕРєСЃ РґРѕСЃС‚СѓРїРµРЅ: {flow2.is_webhook_available()}")
+    print(f"   Р вЂќР С•РЎРѓРЎвЂљРЎС“Р С—Р ВµР Р…: {valid}")
+    print(f"   Р РЋР С•Р С•Р В±РЎвЂ°Р ВµР Р…Р С‘Р Вµ: {msg}")
+    print(f"   Р В§Р ВµР С”Р В±Р С•Р С”РЎРѓ Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р ВµР Р…: {flow2.is_webhook_available()}")
 
     print()
 
-    # РўРµСЃС‚ 3: Р›РѕРі СЂРµС€РµРЅРёР№
-    print("3. Р›РѕРі СЂРµС€РµРЅРёР№:")
+    # Р СћР ВµРЎРѓРЎвЂљ 3: Р вЂєР С•Р С– РЎР‚Р ВµРЎв‚¬Р ВµР Р…Р С‘Р в„–
+    print("3. Р вЂєР С•Р С– РЎР‚Р ВµРЎв‚¬Р ВµР Р…Р С‘Р в„–:")
     for d in flow.get_decisions():
-        print(f"   {d['ip']}: {d['reason'][:60]}... (РјРµС‚РѕРґ: {d['method']})")
+        print(f"   {d['ip']}: {d['reason'][:60]}... (Р СР ВµРЎвЂљР С•Р Т‘: {d['method']})")
 
     print("=" * 60)
+

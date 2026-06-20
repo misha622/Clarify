@@ -1,11 +1,11 @@
-"""
-Clarify Web UI — FastAPI сервер.
+﻿"""
+Clarify Web UI вЂ” FastAPI СЃРµСЂРІРµСЂ.
 
-Запуск:
+Р—Р°РїСѓСЃРє:
     python -m src.api.server
     python -m src.api.server --port 8000 --lang ru
 
-Открыть в браузере: http://localhost:8000
+РћС‚РєСЂС‹С‚СЊ РІ Р±СЂР°СѓР·РµСЂРµ: http://localhost:8000
 """
 
 import sys
@@ -36,8 +36,26 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Clarify Autonomous Security Layer", version="0.2.0")
+# === API Key Middleware ===
+from starlette.middleware.base import BaseHTTPMiddleware
+import os
 
-# Глобальные компоненты
+class APIKeyMiddleware(BaseHTTPMiddleware):
+    """Простой API-key middleware. Установи CLARIFY_API_KEY в env. Без ключа — dev mode (пропускает)."""
+    async def dispatch(self, request, call_next):
+        if request.url.path in ("/api/health", "/", "/favicon.ico"):
+            return await call_next(request)
+        expected = os.environ.get("CLARIFY_API_KEY", "")
+        if not expected:
+            return await call_next(request)
+        if request.headers.get("X-API-Key", "") != expected:
+            from starlette.responses import JSONResponse
+            return JSONResponse({"error": "unauthorized"}, status_code=401)
+        return await call_next(request)
+
+app.add_middleware(APIKeyMiddleware)
+
+# Р“Р»РѕР±Р°Р»СЊРЅС‹Рµ РєРѕРјРїРѕРЅРµРЅС‚С‹
 COMPONENTS = {}
 ALERT_CACHE: dict[str, dict] = {}
 BLOCKED_IPS: set = set()
@@ -46,7 +64,7 @@ CONFIRM_FLOW: Optional[ConfirmFlow] = None
 
 
 def init_components(lang: str = "ru"):
-    """Инициализирует все компоненты Clarify."""
+    """РРЅРёС†РёР°Р»РёР·РёСЂСѓРµС‚ РІСЃРµ РєРѕРјРїРѕРЅРµРЅС‚С‹ Clarify."""
     global CONFIRM_FLOW
 
     with open("config/detectors.yaml", "r") as f:
@@ -64,7 +82,7 @@ def init_components(lang: str = "ru"):
         components["beaconing_explainer"] = ShapExplainer(
             model, bc_cfg["features"], top_n=3
         )
-        logger.info("Beaconing загружен")
+        logger.info("Beaconing Р·Р°РіСЂСѓР¶РµРЅ")
 
     # Brute-Force
     bf_cfg = config["detectors"].get("brute_force", {})
@@ -76,7 +94,7 @@ def init_components(lang: str = "ru"):
         components["brute_force_explainer"] = ShapExplainer(
             model, bf_cfg["features"], top_n=3
         )
-        logger.info("Brute-Force загружен")
+        logger.info("Brute-Force Р·Р°РіСЂСѓР¶РµРЅ")
 
     # DGA
     dga_cfg = config["detectors"].get("dga", {})
@@ -88,16 +106,16 @@ def init_components(lang: str = "ru"):
         components["dga_explainer"] = ShapExplainer(
             model, dga_cfg.get("features", DGADetector.FEATURE_NAMES), top_n=3
         )
-        logger.info("DGA загружен")
+        logger.info("DGA Р·Р°РіСЂСѓР¶РµРЅ")
 
-    # Рендерер
+    # Р РµРЅРґРµСЂРµСЂ
     dict_path = f"config/feature_dictionary{'_en' if lang == 'en' else ''}.yaml"
     if not Path(dict_path).exists():
         dict_path = "config/feature_dictionary.yaml"
     components["renderer"] = TemplateRenderer(dictionary_path=dict_path)
     components["builder"] = AlertCardBuilder(template_renderer=components["renderer"])
 
-    # Генератор для демо
+    # Р“РµРЅРµСЂР°С‚РѕСЂ РґР»СЏ РґРµРјРѕ
     components["generator"] = SyntheticGenerator(seed=42)
 
     # Confirm-flow
@@ -107,7 +125,7 @@ def init_components(lang: str = "ru"):
 
 
 def generate_demo_alerts(n: int = 10, use_cache: bool = True) -> list[dict]:
-    """Генерирует демо-алерты. Кеширует по ID для детального просмотра."""
+    """Р“РµРЅРµСЂРёСЂСѓРµС‚ РґРµРјРѕ-Р°Р»РµСЂС‚С‹. РљРµС€РёСЂСѓРµС‚ РїРѕ ID РґР»СЏ РґРµС‚Р°Р»СЊРЅРѕРіРѕ РїСЂРѕСЃРјРѕС‚СЂР°."""
     global ALERT_CACHE
 
     if not use_cache or len(ALERT_CACHE) == 0:
@@ -183,11 +201,11 @@ def generate_demo_alerts(n: int = 10, use_cache: bool = True) -> list[dict]:
                 )
                 ALERT_CACHE[card.alert_id] = card.to_dict()
 
-    # Фильтруем: убираем игнорированные и заблокированные
+    # Р¤РёР»СЊС‚СЂСѓРµРј: СѓР±РёСЂР°РµРј РёРіРЅРѕСЂРёСЂРѕРІР°РЅРЅС‹Рµ Рё Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅРЅС‹Рµ
     result = []
     for alert in ALERT_CACHE.values():
         if alert["alert_id"] not in IGNORED_ALERTS:
-            # Помечаем заблокированные
+            # РџРѕРјРµС‡Р°РµРј Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅРЅС‹Рµ
             if alert["source_ip"] in BLOCKED_IPS:
                 alert["blocked"] = True
             result.append(alert)
@@ -196,25 +214,25 @@ def generate_demo_alerts(n: int = 10, use_cache: bool = True) -> list[dict]:
 
 
 def refresh_cache():
-    """Принудительно обновляет кеш."""
+    """РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕ РѕР±РЅРѕРІР»СЏРµС‚ РєРµС€."""
     global ALERT_CACHE
     ALERT_CACHE = {}
     return generate_demo_alerts(use_cache=False)
 
 
-# ═══════════════════════════════════════════════════════════════
+# в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 # API Endpoints
-# ═══════════════════════════════════════════════════════════════
+# в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
-    """Главная страница дашборда."""
+    """Р“Р»Р°РІРЅР°СЏ СЃС‚СЂР°РЅРёС†Р° РґР°С€Р±РѕСЂРґР°."""
     return DASHBOARD_HTML
 
 
 @app.get("/api/alerts")
 async def api_alerts(count: int = Query(default=10, le=50)):
-    """API: получить список алертов."""
+    """API: РїРѕР»СѓС‡РёС‚СЊ СЃРїРёСЃРѕРє Р°Р»РµСЂС‚РѕРІ."""
     alerts = generate_demo_alerts(count)
     return JSONResponse({
         "alerts": alerts,
@@ -227,7 +245,7 @@ async def api_alerts(count: int = Query(default=10, le=50)):
 
 @app.get("/api/health")
 async def health():
-    """API: проверка здоровья."""
+    """API: РїСЂРѕРІРµСЂРєР° Р·РґРѕСЂРѕРІСЊСЏ."""
     return {
         "status": "ok",
         "detectors": {
@@ -243,10 +261,10 @@ async def health():
 
 @app.get("/api/alert/{alert_id}")
 async def api_alert_detail(alert_id: str):
-    """API: детали одного алерта (из кеша)."""
+    """API: РґРµС‚Р°Р»Рё РѕРґРЅРѕРіРѕ Р°Р»РµСЂС‚Р° (РёР· РєРµС€Р°)."""
     if alert_id in ALERT_CACHE:
         alert = ALERT_CACHE[alert_id]
-        # Добавляем статус
+        # Р”РѕР±Р°РІР»СЏРµРј СЃС‚Р°С‚СѓСЃ
         alert["blocked"] = alert["source_ip"] in BLOCKED_IPS
         alert["ignored"] = alert_id in IGNORED_ALERTS
         return JSONResponse(alert)
@@ -256,8 +274,8 @@ async def api_alert_detail(alert_id: str):
 @app.post("/api/block/{alert_id}")
 async def api_block_ip(alert_id: str):
     """
-    API: заблокировать IP из алерта.
-    Возвращает команду для копирования (human-in-the-loop).
+    API: Р·Р°Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ IP РёР· Р°Р»РµСЂС‚Р°.
+    Р’РѕР·РІСЂР°С‰Р°РµС‚ РєРѕРјР°РЅРґСѓ РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ (human-in-the-loop).
     """
     global BLOCKED_IPS
 
@@ -267,59 +285,59 @@ async def api_block_ip(alert_id: str):
     alert = ALERT_CACHE[alert_id]
     ip = alert["source_ip"]
 
-    # Проверяем, не заблокирован ли уже
+    # РџСЂРѕРІРµСЂСЏРµРј, РЅРµ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ Р»Рё СѓР¶Рµ
     if ip in BLOCKED_IPS:
         return JSONResponse({
             "success": False,
-            "message": f"IP {ip} уже заблокирован",
+            "message": f"IP {ip} СѓР¶Рµ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ",
             "ip": ip,
         })
 
-    # Блокируем (в памяти)
+    # Р‘Р»РѕРєРёСЂСѓРµРј (РІ РїР°РјСЏС‚Рё)
     BLOCKED_IPS.add(ip)
 
-    # Формируем команду для фаервола
+    # Р¤РѕСЂРјРёСЂСѓРµРј РєРѕРјР°РЅРґСѓ РґР»СЏ С„Р°РµСЂРІРѕР»Р°
     reason = alert.get("alert_type", "unknown")
     explanations = alert.get("explanations", [])
     if explanations:
-        reason += " — " + explanations[0].get("explanation_short", "")
+        reason += " вЂ” " + explanations[0].get("explanation_short", "")
 
     fw_cmd = FirewallCommand(ip=ip, reason=reason, duration_hours=24)
 
-    logger.info(f"IP заблокирован: {ip} (alert={alert_id})")
+    logger.info(f"IP Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ: {ip} (alert={alert_id})")
 
     return JSONResponse({
         "success": True,
-        "message": f"IP {ip} заблокирован",
+        "message": f"IP {ip} Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ",
         "ip": ip,
         "alert_id": alert_id,
         "command": fw_cmd.iptables,
         "command_windows": fw_cmd.windows_firewall,
-        "note": "IP заблокирован в памяти сервера. Для реальной блокировки выполните команду на фаерволе.",
+        "note": "IP Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ РІ РїР°РјСЏС‚Рё СЃРµСЂРІРµСЂР°. Р”Р»СЏ СЂРµР°Р»СЊРЅРѕР№ Р±Р»РѕРєРёСЂРѕРІРєРё РІС‹РїРѕР»РЅРёС‚Рµ РєРѕРјР°РЅРґСѓ РЅР° С„Р°РµСЂРІРѕР»Рµ.",
     })
 
 
 @app.post("/api/ignore/{alert_id}")
 async def api_ignore_alert(alert_id: str):
-    """API: игнорировать алерт."""
+    """API: РёРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ Р°Р»РµСЂС‚."""
     global IGNORED_ALERTS
 
     if alert_id not in ALERT_CACHE:
         return JSONResponse({"error": "alert not found"}, status_code=404)
 
     IGNORED_ALERTS.add(alert_id)
-    logger.info(f"Алерт проигнорирован: {alert_id}")
+    logger.info(f"РђР»РµСЂС‚ РїСЂРѕРёРіРЅРѕСЂРёСЂРѕРІР°РЅ: {alert_id}")
 
     return JSONResponse({
         "success": True,
-        "message": "Алерт отмечен как игнорированный",
+        "message": "РђР»РµСЂС‚ РѕС‚РјРµС‡РµРЅ РєР°Рє РёРіРЅРѕСЂРёСЂРѕРІР°РЅРЅС‹Р№",
         "alert_id": alert_id,
     })
 
 
 @app.post("/api/refresh")
 async def api_refresh():
-    """API: принудительно обновить алерты."""
+    """API: РїСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕ РѕР±РЅРѕРІРёС‚СЊ Р°Р»РµСЂС‚С‹."""
     alerts = refresh_cache()
     return JSONResponse({
         "alerts": alerts,
@@ -330,20 +348,20 @@ async def api_refresh():
 
 @app.post("/api/reset")
 async def api_reset():
-    """API: сбросить все блокировки и игнорирования."""
+    """API: СЃР±СЂРѕСЃРёС‚СЊ РІСЃРµ Р±Р»РѕРєРёСЂРѕРІРєРё Рё РёРіРЅРѕСЂРёСЂРѕРІР°РЅРёСЏ."""
     global BLOCKED_IPS, IGNORED_ALERTS, ALERT_CACHE
     BLOCKED_IPS = set()
     IGNORED_ALERTS = set()
     ALERT_CACHE = {}
     return JSONResponse({
         "success": True,
-        "message": "Все блокировки и игнорирования сброшены",
+        "message": "Р’СЃРµ Р±Р»РѕРєРёСЂРѕРІРєРё Рё РёРіРЅРѕСЂРёСЂРѕРІР°РЅРёСЏ СЃР±СЂРѕС€РµРЅС‹",
     })
 
 
-# ═══════════════════════════════════════════════════════════════
-# HTML Дашборд
-# ═══════════════════════════════════════════════════════════════
+# в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+# HTML Р”Р°С€Р±РѕСЂРґ
+# в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 
 DASHBOARD_HTML = """
 <!DOCTYPE html>
@@ -351,7 +369,7 @@ DASHBOARD_HTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clarify — Autonomous Security Layer</title>
+    <title>Clarify вЂ” Autonomous Security Layer</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -457,41 +475,41 @@ DASHBOARD_HTML = """
 </head>
 <body>
     <div class="header">
-        <h1>🛡 Clarify</h1>
+        <h1>рџ›Ў Clarify</h1>
         <div class="status">
-            <span class="dot green"></span> <span id="detector-status">Загрузка...</span>
-            &nbsp;|&nbsp; 🚫 <span id="blocked-count">0</span> заблокировано
-            &nbsp;|&nbsp; ✅ <span id="ignored-count">0</span> проигнорировано
+            <span class="dot green"></span> <span id="detector-status">Р—Р°РіСЂСѓР·РєР°...</span>
+            &nbsp;|&nbsp; рџљ« <span id="blocked-count">0</span> Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅРѕ
+            &nbsp;|&nbsp; вњ… <span id="ignored-count">0</span> РїСЂРѕРёРіРЅРѕСЂРёСЂРѕРІР°РЅРѕ
         </div>
     </div>
     <div class="container">
         <div class="stats">
             <div class="stat-card">
-                <div class="label">Алертов</div>
-                <div class="value critical" id="stat-total">—</div>
+                <div class="label">РђР»РµСЂС‚РѕРІ</div>
+                <div class="value critical" id="stat-total">вЂ”</div>
             </div>
             <div class="stat-card">
-                <div class="label">Критических</div>
-                <div class="value critical" id="stat-critical">—</div>
+                <div class="label">РљСЂРёС‚РёС‡РµСЃРєРёС…</div>
+                <div class="value critical" id="stat-critical">вЂ”</div>
             </div>
             <div class="stat-card">
-                <div class="label">Латентность</div>
-                <div class="value normal" id="stat-latency">—</div>
+                <div class="label">Р›Р°С‚РµРЅС‚РЅРѕСЃС‚СЊ</div>
+                <div class="value normal" id="stat-latency">вЂ”</div>
             </div>
             <div class="stat-card">
-                <div class="label">Заблокировано IP</div>
-                <div class="value info" id="stat-blocked">—</div>
+                <div class="label">Р—Р°Р±Р»РѕРєРёСЂРѕРІР°РЅРѕ IP</div>
+                <div class="value info" id="stat-blocked">вЂ”</div>
             </div>
         </div>
         <div class="refresh-bar">
-            <span id="last-update">Последнее обновление: —</span>
+            <span id="last-update">РџРѕСЃР»РµРґРЅРµРµ РѕР±РЅРѕРІР»РµРЅРёРµ: вЂ”</span>
             <div>
-                <button onclick="loadAlerts()">🔄 Обновить</button>
-                <button onclick="resetAll()" style="color: #f85149;">🗑 Сбросить всё</button>
+                <button onclick="loadAlerts()">рџ”„ РћР±РЅРѕРІРёС‚СЊ</button>
+                <button onclick="resetAll()" style="color: #f85149;">рџ—‘ РЎР±СЂРѕСЃРёС‚СЊ РІСЃС‘</button>
             </div>
         </div>
         <div class="alert-list" id="alert-list">
-            <div class="empty-state">Загрузка алертов...</div>
+            <div class="empty-state">Р—Р°РіСЂСѓР·РєР° Р°Р»РµСЂС‚РѕРІ...</div>
         </div>
     </div>
 
@@ -512,16 +530,16 @@ DASHBOARD_HTML = """
                 document.getElementById('blocked-count').textContent = blockedIPs.size;
                 document.getElementById('ignored-count').textContent = data.ignored_count || 0;
                 document.getElementById('last-update').textContent = 
-                    'Обновлено: ' + new Date().toLocaleTimeString();
+                    'РћР±РЅРѕРІР»РµРЅРѕ: ' + new Date().toLocaleTimeString();
             } catch (e) {
-                showToast('Ошибка загрузки алертов', 'error');
+                showToast('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё Р°Р»РµСЂС‚РѕРІ', 'error');
             }
         }
 
         function renderAlerts(alerts) {
             const container = document.getElementById('alert-list');
             if (!alerts || alerts.length === 0) {
-                container.innerHTML = '<div class="empty-state">✅ Нет активных алертов</div>';
+                container.innerHTML = '<div class="empty-state">вњ… РќРµС‚ Р°РєС‚РёРІРЅС‹С… Р°Р»РµСЂС‚РѕРІ</div>';
                 return;
             }
 
@@ -536,12 +554,12 @@ DASHBOARD_HTML = """
                     return `
                         <div class="explanation-item">
                             <span class="shap-value ${shapClass}">${sign}${exp.shap_value.toFixed(2)}</span>
-                            <span class="explanation-text">${exp.explanation_short || exp.explanation || '—'}</span>
+                            <span class="explanation-text">${exp.explanation_short || exp.explanation || 'вЂ”'}</span>
                         </div>`;
                 }).join('');
 
                 const time = alert.time_local || new Date(alert.timestamp * 1000).toLocaleString();
-                const blockedBadge = isBlocked ? '<span class="badge blocked">ЗАБЛОКИРОВАН</span>' : '';
+                const blockedBadge = isBlocked ? '<span class="badge blocked">Р—РђР‘Р›РћРљРР РћР’РђРќ</span>' : '';
 
                 return `
                     <div class="alert-card ${cardClass}" id="card-${alert.alert_id}">
@@ -550,15 +568,15 @@ DASHBOARD_HTML = """
                             <span class="alert-confidence">${alert.confidence || Math.round(alert.model_score * 100) + '%'}</span>
                         </div>
                         <div class="alert-source">
-                            ${alert.source_ip} ${alert.target_ip ? '→ ' + alert.target_ip : ''} · ${time}
+                            ${alert.source_ip} ${alert.target_ip ? 'в†’ ' + alert.target_ip : ''} В· ${time}
                         </div>
                         <div class="explanations">${explanations}</div>
                         <div class="alert-actions">
                             <button class="btn block" onclick="blockIP('${alert.alert_id}')" ${isBlocked ? 'disabled' : ''}>
-                                ${isBlocked ? '✓ Заблокирован' : '🚫 Заблокировать'}
+                                ${isBlocked ? 'вњ“ Р—Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ' : 'рџљ« Р—Р°Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ'}
                             </button>
-                            <button class="btn ignore" onclick="ignoreAlert('${alert.alert_id}')">✅ Игнорировать</button>
-                            <button class="btn" onclick="showDetails('${alert.alert_id}')">📊 SHAP-анализ</button>
+                            <button class="btn ignore" onclick="ignoreAlert('${alert.alert_id}')">вњ… РРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ</button>
+                            <button class="btn" onclick="showDetails('${alert.alert_id}')">рџ“Љ SHAP-Р°РЅР°Р»РёР·</button>
                         </div>
                         <div class="command-block" id="cmd-${alert.alert_id}"></div>
                     </div>`;
@@ -571,8 +589,8 @@ DASHBOARD_HTML = """
             const critical = alerts.filter(a => a.severity === 'critical').length;
             document.getElementById('stat-critical').textContent = critical;
             const latencies = alerts.map(a => a.latency_ms || 0).filter(l => l > 0);
-            const avgLat = latencies.length > 0 ? (latencies.reduce((a,b) => a+b, 0) / latencies.length).toFixed(1) : '—';
-            document.getElementById('stat-latency').textContent = avgLat + ' мс';
+            const avgLat = latencies.length > 0 ? (latencies.reduce((a,b) => a+b, 0) / latencies.length).toFixed(1) : 'вЂ”';
+            document.getElementById('stat-latency').textContent = avgLat + ' РјСЃ';
             document.getElementById('stat-blocked').textContent = data.blocked_ips ? data.blocked_ips.length : 0;
         }
 
@@ -580,7 +598,7 @@ DASHBOARD_HTML = """
             const alert = currentAlerts.find(a => a.alert_id === alertId);
             if (!alert) return;
 
-            if (!confirm(`Заблокировать IP ${alert.source_ip}?\\n\\nПричина: ${alert.alert_type.toUpperCase()}\\nОбъяснение: ${(alert.explanations||[])[0]?.explanation_short || '—'}`)) {
+            if (!confirm(`Р—Р°Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ IP ${alert.source_ip}?\\n\\nРџСЂРёС‡РёРЅР°: ${alert.alert_type.toUpperCase()}\\nРћР±СЉСЏСЃРЅРµРЅРёРµ: ${(alert.explanations||[])[0]?.explanation_short || 'вЂ”'}`)) {
                 return;
             }
 
@@ -590,9 +608,9 @@ DASHBOARD_HTML = """
 
                 if (data.success) {
                     blockedIPs.add(data.ip);
-                    showToast(`IP ${data.ip} заблокирован`, 'success');
+                    showToast(`IP ${data.ip} Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ`, 'success');
 
-                    // Показываем команду
+                    // РџРѕРєР°Р·С‹РІР°РµРј РєРѕРјР°РЅРґСѓ
                     if (data.command) {
                         const cmdBlock = document.getElementById('cmd-' + alertId);
                         if (cmdBlock) {
@@ -601,17 +619,17 @@ DASHBOARD_HTML = """
                         }
                     }
 
-                    // Обновляем карточку
+                    // РћР±РЅРѕРІР»СЏРµРј РєР°СЂС‚РѕС‡РєСѓ
                     const card = document.getElementById('card-' + alertId);
                     if (card) card.classList.add('blocked');
 
                     updateStats({alerts: currentAlerts, blocked_ips: [...blockedIPs]});
                     document.getElementById('blocked-count').textContent = blockedIPs.size;
                 } else {
-                    showToast(data.message || 'Ошибка блокировки', 'error');
+                    showToast(data.message || 'РћС€РёР±РєР° Р±Р»РѕРєРёСЂРѕРІРєРё', 'error');
                 }
             } catch (e) {
-                showToast('Ошибка при блокировке', 'error');
+                showToast('РћС€РёР±РєР° РїСЂРё Р±Р»РѕРєРёСЂРѕРІРєРµ', 'error');
             }
         }
 
@@ -622,15 +640,15 @@ DASHBOARD_HTML = """
 
                 if (data.success) {
                     ignoredAlerts.add(alertId);
-                    showToast('Алерт проигнорирован', 'info');
+                    showToast('РђР»РµСЂС‚ РїСЂРѕРёРіРЅРѕСЂРёСЂРѕРІР°РЅ', 'info');
 
-                    // Убираем карточку из списка
+                    // РЈР±РёСЂР°РµРј РєР°СЂС‚РѕС‡РєСѓ РёР· СЃРїРёСЃРєР°
                     const card = document.getElementById('card-' + alertId);
                     if (card) {
                         card.style.opacity = '0';
                         setTimeout(() => {
                             card.remove();
-                            // Обновляем статистику
+                            // РћР±РЅРѕРІР»СЏРµРј СЃС‚Р°С‚РёСЃС‚РёРєСѓ
                             const remaining = document.querySelectorAll('.alert-card').length;
                             document.getElementById('stat-total').textContent = remaining;
                         }, 300);
@@ -639,7 +657,7 @@ DASHBOARD_HTML = """
                     document.getElementById('ignored-count').textContent = ignoredAlerts.size;
                 }
             } catch (e) {
-                showToast('Ошибка при игнорировании', 'error');
+                showToast('РћС€РёР±РєР° РїСЂРё РёРіРЅРѕСЂРёСЂРѕРІР°РЅРёРё', 'error');
             }
         }
 
@@ -648,7 +666,7 @@ DASHBOARD_HTML = """
         }
 
         async function resetAll() {
-            if (!confirm('Сбросить все блокировки и игнорирования?')) return;
+            if (!confirm('РЎР±СЂРѕСЃРёС‚СЊ РІСЃРµ Р±Р»РѕРєРёСЂРѕРІРєРё Рё РёРіРЅРѕСЂРёСЂРѕРІР°РЅРёСЏ?')) return;
 
             try {
                 await fetch('/api/reset', { method: 'POST' });
@@ -657,9 +675,9 @@ DASHBOARD_HTML = """
                 document.getElementById('blocked-count').textContent = '0';
                 document.getElementById('ignored-count').textContent = '0';
                 await loadAlerts();
-                showToast('Всё сброшено', 'info');
+                showToast('Р’СЃС‘ СЃР±СЂРѕС€РµРЅРѕ', 'info');
             } catch (e) {
-                showToast('Ошибка сброса', 'error');
+                showToast('РћС€РёР±РєР° СЃР±СЂРѕСЃР°', 'error');
             }
         }
 
@@ -677,16 +695,16 @@ DASHBOARD_HTML = """
                 const data = await resp.json();
                 const detectors = data.detectors || {};
                 const active = Object.values(detectors).filter(v => v).length;
-                document.getElementById('detector-status').textContent = active + ' детекторов';
+                document.getElementById('detector-status').textContent = active + ' РґРµС‚РµРєС‚РѕСЂРѕРІ';
                 document.getElementById('blocked-count').textContent = data.blocked_ips || 0;
                 document.getElementById('ignored-count').textContent = data.ignored_alerts || 0;
             } catch(e) {}
         }
 
-        // Загрузка при старте
+        // Р—Р°РіСЂСѓР·РєР° РїСЂРё СЃС‚Р°СЂС‚Рµ
         loadAlerts();
         loadHealth();
-        // Автообновление каждые 30 секунд
+        // РђРІС‚РѕРѕР±РЅРѕРІР»РµРЅРёРµ РєР°Р¶РґС‹Рµ 30 СЃРµРєСѓРЅРґ
         setInterval(loadAlerts, 30000);
     </script>
 </body>
@@ -696,17 +714,18 @@ DASHBOARD_HTML = """
 
 def main():
     parser = argparse.ArgumentParser(description="Clarify Web UI Server")
-    parser.add_argument("--port", type=int, default=8000, help="Порт")
-    parser.add_argument("--host", default="0.0.0.0", help="Хост")
-    parser.add_argument("--lang", default="ru", choices=["ru", "en"], help="Язык")
+    parser.add_argument("--port", type=int, default=8000, help="РџРѕСЂС‚")
+    parser.add_argument("--host", default="127.0.0.1", help="РҐРѕСЃС‚")
+    parser.add_argument("--lang", default="ru", choices=["ru", "en"], help="РЇР·С‹Рє")
     args = parser.parse_args()
 
     global COMPONENTS
     COMPONENTS = init_components(args.lang)
 
-    logger.info(f"Clarify Web UI запущен: http://localhost:{args.port}")
+    logger.info(f"Clarify Web UI Р·Р°РїСѓС‰РµРЅ: http://localhost:{args.port}")
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
 
 
 if __name__ == "__main__":
     main()
+

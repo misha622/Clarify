@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 from src.ui.confirm_flow import (
     ConfirmFlow, WebhookConfig, FirewallCommand, ActionMethod
 )
@@ -12,13 +12,14 @@ class TestFirewallCommand:
         assert "203.0.113.45" in ipt
         assert "DROP" in ipt
 
+    
     def test_escape_quotes(self):
         cmd = FirewallCommand(ip="203.0.113.45", reason='Test "quoted" reason', duration_hours=24)
         ipt = cmd.iptables
-        # NOTE: экранирование кавычек — известный баг, пока не исправлен
-        # Проверяем только что команда формируется без падения
-        assert "iptables" in ipt
-        assert "203.0.113.45" in ipt
+        # Кавычки должны быть экранированы обратным слешем
+        assert '\\"' in ipt, f"Expected escaped quotes in: {ipt}"
+        # Исходная кавычка не должна остаться незаэкранированной внутри --comment
+        assert '--comment "' not in ipt.split('"Test')[0] + '"' if '"Test' in ipt else True
 
     def test_windows_firewall_format(self):
         cmd = FirewallCommand(ip="203.0.113.45", reason="Test", duration_hours=24)
@@ -71,3 +72,4 @@ class TestConfirmFlow:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
