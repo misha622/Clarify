@@ -191,22 +191,20 @@ Your logs (Wazuh/ELK/Suricata)
    ┌─────────────┐
    │ Confirm-flow │  ← webhook or copy command, not autonomous
    └─────────────┘
-Components
-Component	Description	Status
-detectors/beaconing.py	C2 beaconing detector (window stats)	✅ Ready
-explainers/shap_explainer.py	TreeExplainer for XGBoost	✅ Ready
-rendering/template_renderer.py	NL templates from YAML dictionary	✅ Ready
-ui/alert_card.py	CLI + JSON alert card	✅ Ready
-ui/confirm_flow.py	Human-in-the-loop blocking	✅ Ready
-data/synthetic_generator.py	Synthetic data for training	✅ Ready
-models/train_beaconing.py	Training + CV + calibration	✅ Ready
-DGA detector	DNS DGA (lexical features)	📋 Planned
-Brute-force detector	RDP/SSH brute-force	📋 Planned
-UEBA detector	Behavioral anomalies	📋 Planned
-Web UI	FastAPI + HTMX dashboard	📋 Planned
-Wazuh/ELK connectors	Log ingestion	📋 Planned
-Configuration
-Detection thresholds: config/detectors.yaml
+| Component | Description | Status |
+|-----------|-------------|--------|
+| `detectors/beaconing.py` | C2 beaconing detector (window stats) | ✅ Ready |
+| `detectors/dga.py` | DNS DGA (lexical features) | ✅ Ready |
+| `detectors/brute_force.py` | RDP/SSH brute-force | ✅ Ready |
+| `explainers/shap_explainer.py` | TreeExplainer for XGBoost | ✅ Ready |
+| `rendering/template_renderer.py` | NL templates from YAML dictionary | ✅ Ready |
+| `ui/alert_card.py` | CLI + JSON alert card | ✅ Ready |
+| `ui/confirm_flow.py` | Human-in-the-loop blocking | ✅ Ready |
+| `api/server.py` | FastAPI dashboard | ✅ Ready |
+| `connectors/wazuh_connector.py` | Log ingestion from Wazuh | ✅ Ready |
+| `data/synthetic_generator.py` | Synthetic data for training | ✅ Ready |
+| `models/train_beaconing.py` | Training + CV + calibration | ✅ Ready |
+| UEBA detector | Behavioral anomalies | 📋 Planned |
 
 yaml
 detectors:
